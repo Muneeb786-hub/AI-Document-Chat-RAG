@@ -177,8 +177,8 @@ AI Document Chat (RAG)/
 - [x] **Frontend setup** (Phase 2)
 - [x] **Backend setup** (Phase 3)
 - [ ] **Authentication & Config** (Optional SaaS module)
-- [ ] **PDF upload** (Phase 4)
-- [ ] **PDF text extraction** (Phase 4)
+- [x] **PDF upload** (Phase 4)
+- [x] **PDF text extraction** (Phase 4)
 - [ ] **Text chunking** (Phase 5)
 - [ ] **Embeddings generation** (Phase 5)
 - [ ] **ChromaDB integration** (Phase 5)
@@ -202,7 +202,7 @@ AI Document Chat (RAG)/
 | **01** | **Project Foundation** | Architecture, folder structure, engineering docs, README | **Completed** ✅ |
 | **02** | **Frontend UI/UX** | Next.js 14, Tailwind design system, split-pane workspace, chat feed | **Completed** ✅ |
 | **03** | **Backend Foundation** | FastAPI async app, Pydantic settings, health checks, CORS | **Completed** ✅ |
-| **04** | **PDF Processing Engine** | File upload endpoint, PyMuPDF page extraction, metadata preservation | Pending ⏳ |
+| **04** | **PDF Processing Engine** | File upload endpoint, PyMuPDF page extraction, metadata preservation | **Completed** ✅ |
 | **05** | **Chunking & Embeddings** | Recursive chunking, OpenAI/Local embeddings, ChromaDB vector indexing | Pending ⏳ |
 | **06** | **Semantic Retrieval** | Vector similarity queries, MMR, score thresholding, chunk inspection | Pending ⏳ |
 | **07** | **RAG Pipeline & Streaming** | Grounded prompt design, GPT-4o integration, SSE streaming endpoint | Pending ⏳ |
