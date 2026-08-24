@@ -4,6 +4,7 @@ from app.core.logging import logger
 from app.models.schemas import ChatCitation, DocumentChunk, ChatQueryResponse
 from app.services.retrieval_service import retrieval_service
 from app.services.llm_service import llm_service
+from app.services.citation_service import citation_service
 
 
 class RAGService:
@@ -44,23 +45,7 @@ class RAGService:
 
     def extract_citations(self, chunks: List[DocumentChunk]) -> List[ChatCitation]:
         """Convert retrieved document chunks into clean frontend citation pills."""
-        citations: List[ChatCitation] = []
-        for idx, chunk in enumerate(chunks):
-            # Take first ~120 characters as snippet
-            snippet_text = chunk.content.strip()
-            if len(snippet_text) > 140:
-                snippet_text = snippet_text[:140] + "..."
-
-            citation = ChatCitation(
-                id=f"cit_{chunk.chunk_id}_{idx}",
-                doc_id=chunk.doc_id,
-                doc_name=chunk.doc_name,
-                page_number=chunk.page_number,
-                snippet=snippet_text,
-                score=chunk.similarity_score,
-            )
-            citations.append(citation)
-        return citations
+        return citation_service.generate_grounded_citations(chunks)
 
     async def stream_rag_chat(
         self,
