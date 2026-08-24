@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # FastAPI Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rag_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PROJECT_NAME=AI Document Chat (RAG)
+      - ENVIRONMENT=production
+      - DEBUG=False
+      - API_V1_STR=/api/v1
+      - BACKEND_HOST=0.0.0.0
+      - BACKEND_PORT=8000
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - EMBEDDING_PROVIDER=${EMBEDDING_PROVIDER:-openai}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-text-embedding-3-small}
+      - CHROMA_PERSIST_DIRECTORY=/app/data/chroma_db
+      - UPLOAD_DIRECTORY=/app/data/uploads
+      - MAX_FILE_SIZE_MB=25
+      - BACKEND_CORS_ORIGINS=["http://localhost:3000","http://localhost:3001","http://localhost:3002","http://127.0.0.1:3002"]
+    volumes:
+      - chroma_data:/app/data/chroma_db
+      - uploads_data:/app/data/uploads
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - rag_network
+
+  # Next.js 14 Frontend Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rag_frontend
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - PORT=3002
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - rag_network
+
+volumes:
+  chroma_data:
+    driver: local
+  uploads_data:
+    driver: local
+
+networks:
+  rag_network:
+    driver: bridge

@@ -176,7 +176,7 @@ AI Document Chat (RAG)/
 - [x] **Project initialization** (Phase 1)
 - [x] **Frontend setup** (Phase 2)
 - [x] **Backend setup** (Phase 3)
-- [ ] **Authentication & Config** (Optional SaaS module)
+- [x] **Authentication & Config** (Optional SaaS module)
 - [x] **PDF upload** (Phase 4)
 - [x] **PDF text extraction** (Phase 4)
 - [x] **Text chunking** (Phase 5)
@@ -189,9 +189,9 @@ AI Document Chat (RAG)/
 - [x] **Citations** (Phase 8)
 - [x] **Multi-document support** (Phase 9)
 - [x] **Document management** (Phase 9)
-- [ ] **Testing** (Phase 10)
-- [ ] **Docker** (Phase 10)
-- [ ] **Deployment** (Phase 10)
+- [x] **Testing** (Phase 10)
+- [x] **Docker** (Phase 10)
+- [x] **Deployment** (Phase 10)
 
 ---
 
@@ -208,7 +208,7 @@ AI Document Chat (RAG)/
 | **07** | **RAG Pipeline & Streaming** | Grounded prompt design, GPT-4o integration, SSE streaming endpoint | **Completed** ✅ |
 | **08** | **Source Citations** | Citation mapping, inline badges, source viewer highlight panel | **Completed** ✅ |
 | **09** | **Multi-Document Corpus**| Cross-document retrieval, document lifecycle & vector purging | **Completed** ✅ |
-| **10** | **Docker & Hardening** | Multi-stage Docker, integration tests, portfolio showcase polish | Pending ⏳ |
+| **10** | **Docker & Hardening** | Multi-stage Docker, integration tests, portfolio showcase polish | **Completed** ✅ |
 
 ---
 
