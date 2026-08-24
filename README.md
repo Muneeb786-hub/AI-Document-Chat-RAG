@@ -131,12 +131,12 @@ AI-Document-Chat-RAG/
 ├── .env.example                # Environment variable blueprint
 ├── README.md                   # Technical documentation & usage guide
 ├── docs/                       # Architecture & engineering guidelines
-│   ├── 01_project_architect.md
-│   ├── 02_code_reviewer.md
-│   ├── 03_bug_fixer.md
-│   ├── 04_ui_designer.md
-│   ├── 05_security_auditor.md
-│   └── 06_deployment_engineer.md
+│   ├── architecture.md
+│   ├── code_standards.md
+│   ├── troubleshooting.md
+│   ├── design_system.md
+│   ├── security.md
+│   └── deployment.md
 ├── backend/                    # FastAPI Backend Service
 │   ├── Dockerfile
 │   ├── requirements.txt

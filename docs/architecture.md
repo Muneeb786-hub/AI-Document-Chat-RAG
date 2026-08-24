@@ -1,4 +1,4 @@
-# Role 01: Project Architect Guidelines 🏛
+# System Architecture & Design Principles
 
 ## Mission
 Ensure system extensibility, clean architecture, separation of concerns, and clear domain boundaries throughout the development of the AI Document Chat (RAG) platform.

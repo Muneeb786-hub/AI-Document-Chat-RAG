@@ -1,4 +1,4 @@
-# Role 05: Security & Safety Auditor Guidelines 🛡
+# Security Architecture & Input Validation Guidelines
 
 ## Mission
 Protect system integrity, prevent prompt injections, enforce file upload sanitization, and secure environment secrets.

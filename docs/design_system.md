@@ -1,4 +1,4 @@
-# Role 04: UI/UX Designer Guidelines 🎨
+# UI/UX Design System & Token Specifications
 
 ## Mission
 Deliver a state-of-the-art, polished portfolio user experience that feels like a top-tier modern SaaS product (Linear / Vercel / Perplexity aesthetic).

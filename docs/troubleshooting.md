@@ -1,4 +1,4 @@
-# Role 03: Bug Fixer & Diagnostics Manual 🛠
+# Troubleshooting & Edge Case Remediation
 
 ## Mission
 Quickly diagnose, isolate, and resolve edge cases in PDF parsing, vector indexing, streaming SSE connections, and token limits.

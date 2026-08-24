@@ -1,4 +1,4 @@
-# Role 02: Code Reviewer Guidelines 🔍
+# Code Standards & Engineering Guidelines
 
 ## Mission
 Uphold clean code standards, strict typing, error resilience, and high maintainability across Python and TypeScript codebases.
