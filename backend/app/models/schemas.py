@@ -61,6 +61,31 @@ class DocumentQueryResponse(BaseModel):
     formatted_context: str = Field(default="", description="Consolidated context formatted with source page citations")
 
 
+class ChatCitation(BaseModel):
+    """Citation metadata identifying exact source document and page number for an answer."""
+    id: str = Field(..., description="Unique citation identifier")
+    doc_id: str = Field(..., description="Referenced document UUID")
+    doc_name: str = Field(..., description="Original filename of referenced document")
+    page_number: int = Field(..., description="1-indexed source page number")
+    snippet: str = Field(..., description="Verifiable text passage from document")
+    score: Optional[float] = Field(default=None, description="Similarity retrieval score")
+
+
+class ChatQueryRequest(BaseModel):
+    """Request payload for initiating a RAG conversation stream or query."""
+    query: str = Field(..., min_length=1, description="Natural language question")
+    document_ids: Optional[List[str]] = Field(default=None, description="Active document UUIDs to scope retrieval")
+    top_k: int = Field(default=4, ge=1, le=15, description="Number of context chunks to retrieve")
+
+
+class ChatQueryResponse(BaseModel):
+    """Synchronous response payload for complete RAG answers."""
+    query: str
+    answer: str
+    citations: List[ChatCitation] = Field(default_factory=list)
+    chunks: List[DocumentChunk] = Field(default_factory=list)
+
+
 class DocumentUploadResponse(BaseModel):
     """Response payload returned upon successful PDF upload and parsing."""
     message: str = Field(default="Document uploaded and processed successfully.")
