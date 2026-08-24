@@ -92,6 +92,10 @@ class ChromaVectorStore:
         Returns:
             List of DocumentChunk instances ordered by similarity score.
         """
+        if self.collection.count() == 0:
+            logger.info("ChromaDB collection is empty. Returning 0 chunks.")
+            return []
+
         where_clause = None
         if doc_ids and len(doc_ids) == 1:
             where_clause = {"doc_id": doc_ids[0]}
@@ -101,7 +105,7 @@ class ChromaVectorStore:
         try:
             results = self.collection.query(
                 query_embeddings=[query_embedding],
-                n_results=min(top_k, max(1, self.collection.count())),
+                n_results=min(top_k, self.collection.count()),
                 where=where_clause,
                 include=["documents", "metadatas", "distances"],
             )

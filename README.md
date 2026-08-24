@@ -187,8 +187,8 @@ AI Document Chat (RAG)/
 - [x] **Chat interface** (Phase 2 & Phase 7)
 - [x] **Streaming responses** (Phase 7)
 - [x] **Citations** (Phase 8)
-- [ ] **Multi-document support** (Phase 9)
-- [ ] **Document management** (Phase 9)
+- [x] **Multi-document support** (Phase 9)
+- [x] **Document management** (Phase 9)
 - [ ] **Testing** (Phase 10)
 - [ ] **Docker** (Phase 10)
 - [ ] **Deployment** (Phase 10)
@@ -207,7 +207,7 @@ AI Document Chat (RAG)/
 | **06** | **Semantic Retrieval** | Vector similarity queries, MMR, score thresholding, chunk inspection | **Completed** ✅ |
 | **07** | **RAG Pipeline & Streaming** | Grounded prompt design, GPT-4o integration, SSE streaming endpoint | **Completed** ✅ |
 | **08** | **Source Citations** | Citation mapping, inline badges, source viewer highlight panel | **Completed** ✅ |
-| **09** | **Multi-Document Corpus**| Cross-document retrieval, document lifecycle & vector purging | Pending ⏳ |
+| **09** | **Multi-Document Corpus**| Cross-document retrieval, document lifecycle & vector purging | **Completed** ✅ |
 | **10** | **Docker & Hardening** | Multi-stage Docker, integration tests, portfolio showcase polish | Pending ⏳ |
 
 ---
