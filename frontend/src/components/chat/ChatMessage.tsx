@@ -48,7 +48,7 @@ export function ChatMessage({ message, onCitationClick, activeCitation }: ChatMe
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <span className="text-xs font-bold text-white tracking-wide">
-              {isAssistant ? 'Grounded AI Assistant' : 'You'}
+              {isAssistant ? 'Document Assistant' : 'You'}
             </span>
             <span className="text-[10px] text-slate-500 font-mono">
               {formatTimeAgo(message.timestamp)}

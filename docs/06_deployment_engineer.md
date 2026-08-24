@@ -6,7 +6,7 @@ Deliver reproducible, lightweight, secure containerized environments for local d
 ## Containerization Guidelines
 1. **Multi-Stage Builds**:
    - Backend: Use `python:3.11-slim`, install system build tools in builder stage, copy installed wheels to minimal runtime image. Non-root user execution.
-   - Frontend: Use `node:20-alpine`, build Next.js with `output: "standalone"`, copy only static assets and server chunk to runtime stage.
+   - Frontend: Use `node:20-bookworm-slim`, build Next.js with `output: "standalone"`, copy only static assets and server chunk to runtime stage.
 2. **Volume Persistence**:
    - Persist ChromaDB vector store directory and raw PDF uploads using named Docker volumes.
 3. **Healthchecks**:
