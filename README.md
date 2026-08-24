@@ -179,9 +179,9 @@ AI Document Chat (RAG)/
 - [ ] **Authentication & Config** (Optional SaaS module)
 - [x] **PDF upload** (Phase 4)
 - [x] **PDF text extraction** (Phase 4)
-- [ ] **Text chunking** (Phase 5)
-- [ ] **Embeddings generation** (Phase 5)
-- [ ] **ChromaDB integration** (Phase 5)
+- [x] **Text chunking** (Phase 5)
+- [x] **Embeddings generation** (Phase 5)
+- [x] **ChromaDB integration** (Phase 5)
 - [ ] **Semantic search** (Phase 6)
 - [ ] **RAG pipeline** (Phase 7)
 - [x] **Chat interface** (Phase 2 & Phase 7)
@@ -203,7 +203,7 @@ AI Document Chat (RAG)/
 | **02** | **Frontend UI/UX** | Next.js 14, Tailwind design system, split-pane workspace, chat feed | **Completed** ✅ |
 | **03** | **Backend Foundation** | FastAPI async app, Pydantic settings, health checks, CORS | **Completed** ✅ |
 | **04** | **PDF Processing Engine** | File upload endpoint, PyMuPDF page extraction, metadata preservation | **Completed** ✅ |
-| **05** | **Chunking & Embeddings** | Recursive chunking, OpenAI/Local embeddings, ChromaDB vector indexing | Pending ⏳ |
+| **05** | **Chunking & Embeddings** | Recursive chunking, OpenAI/Local embeddings, ChromaDB vector indexing | **Completed** ✅ |
 | **06** | **Semantic Retrieval** | Vector similarity queries, MMR, score thresholding, chunk inspection | Pending ⏳ |
 | **07** | **RAG Pipeline & Streaming** | Grounded prompt design, GPT-4o integration, SSE streaming endpoint | Pending ⏳ |
 | **08** | **Source Citations** | Citation mapping, inline badges, source viewer highlight panel | Pending ⏳ |

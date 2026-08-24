@@ -25,6 +25,26 @@ class DocumentItem(BaseModel):
     summary: Optional[str] = Field(default=None, description="Brief summary or metadata preview")
 
 
+class DocumentChunk(BaseModel):
+    """Represents an individual text chunk indexed in ChromaDB."""
+    chunk_id: str = Field(..., description="Unique chunk identifier, e.g. doc_id_chunk_0")
+    doc_id: str = Field(..., description="Parent document UUID")
+    doc_name: str = Field(..., description="Parent document original filename")
+    chunk_index: int = Field(..., description="Zero-based index of chunk in document")
+    page_number: int = Field(..., description="Source page number in PDF")
+    content: str = Field(..., description="Raw text snippet in chunk")
+    char_start: int = Field(default=0, description="Start character offset in page")
+    char_end: int = Field(default=0, description="End character offset in page")
+    similarity_score: Optional[float] = Field(default=None, description="Similarity score when retrieved")
+
+
+class ChunkListResponse(BaseModel):
+    """Response payload listing chunks of a specific document."""
+    total: int
+    doc_id: str
+    chunks: List[DocumentChunk]
+
+
 class DocumentUploadResponse(BaseModel):
     """Response payload returned upon successful PDF upload and parsing."""
     message: str = Field(default="Document uploaded and processed successfully.")

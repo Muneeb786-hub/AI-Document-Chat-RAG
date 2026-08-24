@@ -10,15 +10,20 @@ from app.core.logging import logger
 from app.core.exceptions import InvalidFileException, DocumentProcessingException
 from app.models.schemas import (
     DocumentItem,
+    DocumentChunk,
+    ChunkListResponse,
     DocumentUploadResponse,
     DocumentListResponse,
     DocumentDeleteResponse,
 )
 from app.services.pdf_service import pdf_service
+from app.services.chunking_service import chunking_service
+from app.services.embedding_service import embedding_service
+from app.services.vector_store import vector_store
 
 router = APIRouter()
 
-# In-memory document registry for fast metadata access (synchronized with disk)
+# In-memory document registry for fast metadata access (synchronized with disk & ChromaDB)
 _DOCUMENT_STORE: Dict[str, DocumentItem] = {}
 
 
@@ -31,8 +36,8 @@ def get_document_store() -> Dict[str, DocumentItem]:
     "/upload",
     response_model=DocumentUploadResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Upload & Extract PDF",
-    description="Uploads a PDF document, validates size and format, saves to disk, and extracts page-level text.",
+    summary="Upload, Extract, Chunk & Index PDF",
+    description="Uploads a PDF, extracts pages, chunks text with sliding-window overlap, embeds vectors, and indexes in ChromaDB.",
 )
 async def upload_document(
     file: UploadFile = File(..., description="Multipart PDF file to process"),
@@ -75,19 +80,31 @@ async def upload_document(
         logger.error("Failed to persist file to disk: %s", str(exc))
         raise DocumentProcessingException("Could not save document file to disk.")
 
-    # 5. Build summary description
-    summary = f"Extracted {meta['page_count']} pages with {meta['total_characters']} characters. Title: {meta['title']}."
+    # 5. Segment document into overlapping chunks with page metadata
+    chunks = chunking_service.chunk_extracted_pages(
+        doc_id=doc_id,
+        doc_name=original_filename,
+        pages=pages,
+    )
+
+    # 6. Generate vector embeddings and index in ChromaDB
+    chunk_texts = [c.content for c in chunks]
+    embeddings = await embedding_service.embed_texts(chunk_texts)
+    vector_store.add_chunks(chunks=chunks, embeddings=embeddings)
+
+    # 7. Build summary description
+    summary = f"Indexed {len(chunks)} chunks across {meta['page_count']} pages ({meta['total_characters']} chars). Title: {meta['title']}."
     if meta.get("is_scanned_warning"):
         summary += " Warning: Document appears to have minimal extractable text."
 
-    # 6. Create and register DocumentItem
+    # 8. Create and register DocumentItem
     doc_item = DocumentItem(
         id=doc_id,
         filename=safe_name,
         original_filename=original_filename,
         file_size_bytes=len(content),
         page_count=meta["page_count"],
-        chunk_count=0,  # Will be populated in Chunking Milestone
+        chunk_count=len(chunks),
         created_at=datetime.utcnow(),
         status="ready",
         summary=summary,
@@ -96,7 +113,7 @@ async def upload_document(
     _DOCUMENT_STORE[doc_id] = doc_item
 
     return DocumentUploadResponse(
-        message="Document successfully processed and indexed.",
+        message="Document successfully processed, chunked, and indexed in vector store.",
         document=doc_item,
     )
 
@@ -113,12 +130,24 @@ async def list_documents() -> DocumentListResponse:
     return DocumentListResponse(total=len(docs), documents=docs)
 
 
+@router.get(
+    "/{doc_id}/chunks",
+    response_model=ChunkListResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Inspect Document Chunks",
+    description="Returns all indexed vector chunks and page positions for a specific document.",
+)
+async def get_document_chunks(doc_id: str) -> ChunkListResponse:
+    chunks = vector_store.get_chunks_by_document(doc_id)
+    return ChunkListResponse(total=len(chunks), doc_id=doc_id, chunks=chunks)
+
+
 @router.delete(
     "/{doc_id}",
     response_model=DocumentDeleteResponse,
     status_code=status.HTTP_200_OK,
-    summary="Delete Ingested Document",
-    description="Removes document from disk storage and unregisters it from the corpus.",
+    summary="Delete Ingested Document & Vectors",
+    description="Removes document from disk storage and purges vector embeddings from ChromaDB.",
 )
 async def delete_document(doc_id: str) -> DocumentDeleteResponse:
     if doc_id not in _DOCUMENT_STORE:
@@ -130,6 +159,7 @@ async def delete_document(doc_id: str) -> DocumentDeleteResponse:
     doc_item = _DOCUMENT_STORE.pop(doc_id)
     file_path = Path(settings.UPLOAD_DIRECTORY) / doc_item.filename
 
+    # Delete raw file from disk
     if file_path.exists():
         try:
             file_path.unlink()
@@ -137,7 +167,10 @@ async def delete_document(doc_id: str) -> DocumentDeleteResponse:
         except Exception as exc:
             logger.warning("Could not delete file '%s' from disk: %s", file_path, str(exc))
 
+    # Purge vectors from ChromaDB
+    vector_store.delete_chunks_by_document(doc_id)
+
     return DocumentDeleteResponse(
-        message="Document deleted successfully from storage.",
+        message="Document and associated vector embeddings purged successfully.",
         doc_id=doc_id,
     )
