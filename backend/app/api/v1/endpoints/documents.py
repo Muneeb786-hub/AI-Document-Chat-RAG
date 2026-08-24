@@ -12,6 +12,8 @@ from app.models.schemas import (
     DocumentItem,
     DocumentChunk,
     ChunkListResponse,
+    DocumentQueryRequest,
+    DocumentQueryResponse,
     DocumentUploadResponse,
     DocumentListResponse,
     DocumentDeleteResponse,
@@ -20,6 +22,7 @@ from app.services.pdf_service import pdf_service
 from app.services.chunking_service import chunking_service
 from app.services.embedding_service import embedding_service
 from app.services.vector_store import vector_store
+from app.services.retrieval_service import retrieval_service
 
 router = APIRouter()
 
@@ -140,6 +143,29 @@ async def list_documents() -> DocumentListResponse:
 async def get_document_chunks(doc_id: str) -> ChunkListResponse:
     chunks = vector_store.get_chunks_by_document(doc_id)
     return ChunkListResponse(total=len(chunks), doc_id=doc_id, chunks=chunks)
+
+
+@router.post(
+    "/query",
+    response_model=DocumentQueryResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Semantic Vector Search",
+    description="Performs semantic similarity retrieval across indexed document chunks and returns formatted context.",
+)
+async def query_documents(payload: DocumentQueryRequest) -> DocumentQueryResponse:
+    chunks, context = await retrieval_service.retrieve_relevant_chunks(
+        query=payload.query,
+        document_ids=payload.document_ids,
+        top_k=payload.top_k,
+        score_threshold=payload.score_threshold,
+    )
+
+    return DocumentQueryResponse(
+        query=payload.query,
+        total_results=len(chunks),
+        chunks=chunks,
+        formatted_context=context,
+    )
 
 
 @router.delete(

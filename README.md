@@ -182,7 +182,7 @@ AI Document Chat (RAG)/
 - [x] **Text chunking** (Phase 5)
 - [x] **Embeddings generation** (Phase 5)
 - [x] **ChromaDB integration** (Phase 5)
-- [ ] **Semantic search** (Phase 6)
+- [x] **Semantic search** (Phase 6)
 - [ ] **RAG pipeline** (Phase 7)
 - [x] **Chat interface** (Phase 2 & Phase 7)
 - [ ] **Streaming responses** (Phase 7)
@@ -204,7 +204,7 @@ AI Document Chat (RAG)/
 | **03** | **Backend Foundation** | FastAPI async app, Pydantic settings, health checks, CORS | **Completed** ✅ |
 | **04** | **PDF Processing Engine** | File upload endpoint, PyMuPDF page extraction, metadata preservation | **Completed** ✅ |
 | **05** | **Chunking & Embeddings** | Recursive chunking, OpenAI/Local embeddings, ChromaDB vector indexing | **Completed** ✅ |
-| **06** | **Semantic Retrieval** | Vector similarity queries, MMR, score thresholding, chunk inspection | Pending ⏳ |
+| **06** | **Semantic Retrieval** | Vector similarity queries, MMR, score thresholding, chunk inspection | **Completed** ✅ |
 | **07** | **RAG Pipeline & Streaming** | Grounded prompt design, GPT-4o integration, SSE streaming endpoint | Pending ⏳ |
 | **08** | **Source Citations** | Citation mapping, inline badges, source viewer highlight panel | Pending ⏳ |
 | **09** | **Multi-Document Corpus**| Cross-document retrieval, document lifecycle & vector purging | Pending ⏳ |

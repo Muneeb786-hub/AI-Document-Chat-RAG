@@ -45,6 +45,22 @@ class ChunkListResponse(BaseModel):
     chunks: List[DocumentChunk]
 
 
+class DocumentQueryRequest(BaseModel):
+    """Request payload for semantic vector search across document corpus."""
+    query: str = Field(..., min_length=1, description="Natural language search query")
+    document_ids: Optional[List[str]] = Field(default=None, description="Optional list of document UUIDs to filter")
+    top_k: int = Field(default=4, ge=1, le=20, description="Maximum number of relevant chunks to retrieve")
+    score_threshold: Optional[float] = Field(default=None, ge=0.0, le=1.0, description="Minimum similarity score")
+
+
+class DocumentQueryResponse(BaseModel):
+    """Response payload returning retrieved semantic chunks and formatted context."""
+    query: str
+    total_results: int
+    chunks: List[DocumentChunk]
+    formatted_context: str = Field(default="", description="Consolidated context formatted with source page citations")
+
+
 class DocumentUploadResponse(BaseModel):
     """Response payload returned upon successful PDF upload and parsing."""
     message: str = Field(default="Document uploaded and processed successfully.")
