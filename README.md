@@ -8,16 +8,17 @@
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python)](https://www.python.org/)
 [![ChromaDB](https://img.shields.io/badge/Vector_DB-ChromaDB-FF4F00)](https://www.trychroma.com/)
 [![OpenAI](https://img.shields.io/badge/LLM-GPT--4o--mini-412991?logo=openai)](https://openai.com/)
-[![Pytest](https://img.shields.io/badge/Tests-Pytest%2015%2F15%20Passed-green?logo=pytest)](https://docs.pytest.org/)
+[![Pytest](https://img.shields.io/badge/Tests-Pytest%2020%2F20%20Passed-green?logo=pytest)](https://docs.pytest.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://www.docker.com/)
 
-A production-grade, full-stack **Retrieval-Augmented Generation (RAG)** system designed to ingest, chunk, embed, and semantically query multi-page PDF documents. Features an interactive Next.js 14 split-pane workspace, low-latency Server-Sent Events (SSE) token streaming, and citation grounding with page-level verification.
+A production-grade, full-stack **Retrieval-Augmented Generation (RAG)** system designed to ingest, chunk, embed, and semantically query multi-page PDF documents. Features an interactive Next.js 14 split-pane workspace, low-latency Server-Sent Events (SSE) token streaming, citation grounding with page-level verification, and enterprise-grade security hardening.
 
 ---
 
 ## 📑 Table of Contents
 - [System Overview](#-system-overview)
 - [Key Features](#-key-features)
+- [Security & Defense Architecture](#-security--defense-architecture)
 - [Architecture & Data Pipeline](#-architecture--data-pipeline)
 - [Tech Stack](#-tech-stack)
 - [Repository Structure](#-repository-structure)
@@ -35,17 +36,18 @@ A production-grade, full-stack **Retrieval-Augmented Generation (RAG)** system d
 Standard Large Language Models struggle with knowledge boundaries and hallucinate when queried about private, domain-specific, or recently updated enterprise documents. 
 
 **AI Document Chat (RAG)** provides an end-to-end grounded document intelligence pipeline:
-1. **Ingestion**: Multi-page PDF text and metadata extraction via PyMuPDF (`fitz`).
+1. **Ingestion & Validation**: Multi-page PDF text extraction, binary header magic bytes validation (`%PDF-`), and path traversal sanitization.
 2. **Segmentation**: Recursive sliding-window chunking preserving document page numbers and character offsets.
 3. **Vector Indexing**: High-dimensional vector embeddings stored in a persistent ChromaDB instance with cosine similarity metrics.
 4. **Semantic Retrieval**: Scoped multi-document querying with score thresholding.
-5. **Grounded Synthesis**: Anti-hallucination prompt boundaries combined with real-time SSE token streaming and verifiable page citations.
+5. **Grounded Synthesis & Defense**: Adversarial prompt injection filtering, strict anti-hallucination prompt boundaries, real-time SSE token streaming, and verifiable page citations.
 
 ---
 
 ## ✨ Key Features
 
 - 📄 **Page-Aware PDF Ingestion**: Extracts text page-by-page using PyMuPDF, tracking total characters, words, and document layout metadata.
+- 🛡️ **Multi-Layer Security Hardening**: Binary magic byte header verification, path traversal prevention, sliding-window rate limiting, and prompt injection defense.
 - ✂️ **Sliding-Window Recursive Chunking**: Segments text along natural paragraph and sentence boundaries with configurable overlap (`CHUNK_SIZE = 1000`, `CHUNK_OVERLAP = 150`) to avoid context truncation.
 - 🧠 **Decoupled Provider Architecture**: Abstract base classes (`BaseEmbeddingService`, `BaseLLMService`) decouple application logic from third-party APIs, enabling drop-in local model replacement (Ollama, FastEmbed, vLLM).
 - ⚡ **Persistent ChromaDB Vector Store**: Local vector storage with `$in` array query filters for simultaneous multi-document retrieval.
@@ -54,6 +56,18 @@ Standard Large Language Models struggle with knowledge boundaries and hallucinat
 - 📚 **Multi-Document Corpus Management**: Query across all indexed documents simultaneously or isolate queries to specific files.
 - 🎨 **Modern Dark-Mode Workspace**: 3-pane split layout built with Next.js 14 App Router, TypeScript, and Tailwind CSS.
 - 🐳 **Containerized Orchestration**: Multi-stage Dockerfiles for frontend and backend with `docker-compose.yml` for unified execution.
+
+---
+
+## 🛡️ Security & Defense Architecture
+
+The application implements defense-in-depth security principles across all layers:
+
+1. **Binary Magic Bytes & File Integrity Validation**: Inspects the raw binary payload header (`%PDF-` / `0x25 0x50 0x44 0x46 0x2D`) to ensure disguised executables, scripts, or corrupted files are rejected before processing.
+2. **Path Traversal & Filename Sanitization**: Normalizes path separators and strips non-alphanumeric special characters to prevent directory traversal exploits (`../../etc/passwd`).
+3. **Adversarial Prompt Injection Defense**: Regex and pattern-based inspection layer detecting system prompt override vectors (`ignore previous instructions`, `reveal system prompt`, `developer mode`, `<|im_start|>`) before passing queries to LLMs.
+4. **Per-IP Sliding-Window Rate Limiting**: In-memory rate limiting on ingestion (`15 req/min`) and conversational query endpoints (`45 req/min`) returning HTTP `429 Too Many Requests` with `Retry-After` headers.
+5. **OWASP Security Headers**: Custom Starlette middleware appending `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `X-XSS-Protection: 1; mode=block`, and restrictive `Referrer-Policy`.
 
 ---
 

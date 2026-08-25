@@ -3,11 +3,13 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional
-from fastapi import APIRouter, File, UploadFile, status, HTTPException
+from fastapi import APIRouter, File, UploadFile, Depends, status, HTTPException
 
 from app.core.config import settings
 from app.core.logging import logger
 from app.core.exceptions import InvalidFileException, DocumentProcessingException
+from app.core.security import sanitize_filename, validate_pdf_magic_bytes
+from app.core.rate_limiter import rate_limit_upload_dependency
 from app.models.schemas import (
     DocumentItem,
     DocumentChunk,
@@ -39,14 +41,15 @@ def get_document_store() -> Dict[str, DocumentItem]:
     "/upload",
     response_model=DocumentUploadResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(rate_limit_upload_dependency)],
     summary="Upload, Extract, Chunk & Index PDF",
     description="Uploads a PDF, extracts pages, chunks text with sliding-window overlap, embeds vectors, and indexes in ChromaDB.",
 )
 async def upload_document(
     file: UploadFile = File(..., description="Multipart PDF file to process"),
 ) -> DocumentUploadResponse:
-    # 1. Validate File Extension and MIME
-    original_filename = file.filename or "uploaded_document.pdf"
+    # 1. Sanitize filename and validate extension
+    original_filename = sanitize_filename(file.filename or "uploaded_document.pdf")
     if not original_filename.lower().endswith(".pdf"):
         raise InvalidFileException("Unsupported file type. Only PDF documents are allowed.")
 
@@ -66,12 +69,15 @@ async def upload_document(
     if len(content) == 0:
         raise InvalidFileException("Uploaded file is empty (0 bytes).")
 
-    # 3. Extract text and validate pages
+    # 3. Validate binary header magic bytes (%PDF-)
+    validate_pdf_magic_bytes(content)
+
+    # 4. Extract text and validate pages
     pages, meta = pdf_service.extract_text_from_bytes(content, filename=original_filename)
 
-    # 4. Generate unique ID & persist file to disk
+    # 5. Generate unique ID & persist file to disk
     doc_id = str(uuid.uuid4())
-    safe_name = f"{doc_id}_{Path(original_filename).name}"
+    safe_name = f"{doc_id}_{original_filename}"
     storage_path = Path(settings.UPLOAD_DIRECTORY) / safe_name
 
     try:

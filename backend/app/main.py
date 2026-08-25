@@ -7,6 +7,7 @@ from fastapi.exceptions import RequestValidationError
 from app.core.config import settings
 from app.core.logging import logger
 from app.core.exceptions import AppException
+from app.core.security_headers import SecurityHeadersMiddleware
 from app.api.v1.api import api_router
 
 
@@ -31,6 +32,9 @@ def create_application() -> FastAPI:
         openapi_url=f"{settings.API_V1_STR}/openapi.json",
         lifespan=lifespan,
     )
+
+    # Attach Enterprise Security Headers Middleware
+    application.add_middleware(SecurityHeadersMiddleware)
 
     # Configure CORS Middleware
     application.add_middleware(
