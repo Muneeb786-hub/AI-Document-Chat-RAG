@@ -8,7 +8,7 @@
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python)](https://www.python.org/)
 [![ChromaDB](https://img.shields.io/badge/Vector_DB-ChromaDB-FF4F00)](https://www.trychroma.com/)
 [![OpenAI](https://img.shields.io/badge/LLM-GPT--4o--mini-412991?logo=openai)](https://openai.com/)
-[![Pytest](https://img.shields.io/badge/Tests-Pytest%2020%2F20%20Passed-green?logo=pytest)](https://docs.pytest.org/)
+[![Pytest](https://img.shields.io/badge/Tests-Pytest%2022%2F22%20Passed-green?logo=pytest)](https://docs.pytest.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://www.docker.com/)
 
 A production-grade, full-stack **Retrieval-Augmented Generation (RAG)** system designed to ingest, chunk, embed, and semantically query multi-page PDF documents. Features an interactive Next.js 14 split-pane workspace, low-latency Server-Sent Events (SSE) token streaming, citation grounding with page-level verification, and enterprise-grade security hardening.

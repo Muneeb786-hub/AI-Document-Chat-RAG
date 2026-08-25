@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Square, Sparkles, AlertCircle, ArrowUp } from 'lucide-react';
+import { Send, Square, Sparkles, AlertCircle, ArrowUp, Compass } from 'lucide-react';
 
 interface ChatInputProps {
   onSendMessage: (text: string) => void;
@@ -9,6 +9,12 @@ interface ChatInputProps {
   isStreaming: boolean;
   selectedDocCount: number;
 }
+
+const PROMPT_SUGGESTIONS = [
+  'Summarize the core findings and key takeaways',
+  'Extract verified facts, dates, and quantitative metrics',
+  'What are the primary conclusions stated in the document?',
+];
 
 export function ChatInput({
   onSendMessage,
@@ -37,6 +43,14 @@ export function ChatInput({
     }
   };
 
+  const handleSuggestionClick = (promptText: string) => {
+    if (selectedDocCount === 0 || isStreaming) return;
+    setInput(promptText);
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -45,7 +59,27 @@ export function ChatInput({
   };
 
   return (
-    <div className="relative border-t border-slate-800/80 bg-slate-950/80 backdrop-blur-md p-4 space-y-2">
+    <div className="relative border-t border-slate-800/80 bg-slate-950/80 backdrop-blur-md p-4 space-y-2.5">
+      {/* Quick Prompt Suggestions */}
+      {selectedDocCount > 0 && !input && !isStreaming && (
+        <div className="flex items-center space-x-2 overflow-x-auto pb-1 custom-scrollbar">
+          <span className="flex items-center space-x-1 text-[11px] text-slate-500 shrink-0 font-medium">
+            <Compass className="w-3 h-3 text-indigo-400" />
+            <span>Suggested:</span>
+          </span>
+          {PROMPT_SUGGESTIONS.map((suggestion, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => handleSuggestionClick(suggestion)}
+              className="text-[11px] text-slate-400 hover:text-slate-200 bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 rounded-full px-3 py-1 transition-all shrink-0 shadow-sm"
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Warning if no documents are selected */}
       {selectedDocCount === 0 && (
         <div className="flex items-center space-x-1.5 text-amber-400/90 text-xs px-1">

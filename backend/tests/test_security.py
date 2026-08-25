@@ -5,10 +5,11 @@ from starlette.requests import Request
 
 from app.main import app
 from app.core.config import settings
-from app.core.security import sanitize_filename, validate_pdf_magic_bytes
+from app.core.security import sanitize_filename, validate_pdf_safety, validate_pdf_magic_bytes, redact_sensitive_pii
 from app.core.exceptions import InvalidFileException
 from app.core.rate_limiter import InMemoryRateLimiter
 from app.services.security_service import security_service
+from app.services.rag_service import rag_service
 
 
 def test_filename_sanitization():
@@ -19,22 +20,45 @@ def test_filename_sanitization():
     assert sanitize_filename("white space & special @ characters.pdf") == "white_space___special___characters.pdf"
 
 
-def test_pdf_magic_bytes_detection():
-    """Verify binary header inspection accurately validates PDF signatures."""
+def test_pdf_magic_bytes_and_active_exploit_detection():
+    """Verify binary header inspection and active scripting exploit defense."""
     valid_header = b"%PDF-1.7\n%\xe2\xe3\xcf\xd3\n"
     fake_header = b"MZ\x90\x00\x03\x00\x00\x00\x04\x00\x00\x00\xff\xff\x00\x00"
     text_header = b"This is just a plain text file disguised as a pdf."
+    exploit_pdf = b"%PDF-1.7\n1 0 obj\n<< /Type /Action /S /JavaScript /JS (app.alert('xss')) >>\nendobj"
 
-    # Should pass without exception
-    validate_pdf_magic_bytes(valid_header)
+    # Clean PDF should pass
+    validate_pdf_safety(valid_header)
 
-    # Fake executable should raise InvalidFileException
+    # Fake executable should raise
     with pytest.raises(InvalidFileException):
-        validate_pdf_magic_bytes(fake_header)
+        validate_pdf_safety(fake_header)
 
-    # Disguised plain text should raise InvalidFileException
+    # Disguised plain text should raise
     with pytest.raises(InvalidFileException):
-        validate_pdf_magic_bytes(text_header)
+        validate_pdf_safety(text_header)
+
+    # Active JavaScript exploit should be blocked
+    with pytest.raises(InvalidFileException) as exc_info:
+        validate_pdf_safety(exploit_pdf)
+    assert "active scripting" in str(exc_info.value)
+
+
+def test_pii_and_secrets_redaction():
+    """Verify sensitive API keys, credit cards, and SSNs are masked before LLM transmission."""
+    sensitive_text = (
+        "User API key is sk-abcdef1234567890abcdef1234567890. "
+        "Customer card number is 4532-1234-5678-9012. "
+        "User SSN is 123-45-6789."
+    )
+    redacted = redact_sensitive_pii(sensitive_text)
+
+    assert "sk-abcdef" not in redacted
+    assert "[REDACTED_API_KEY]" in redacted
+    assert "4532-1234" not in redacted
+    assert "[REDACTED_CREDIT_CARD]" in redacted
+    assert "123-45-6789" not in redacted
+    assert "[REDACTED_SSN]" in redacted
 
 
 def test_prompt_injection_inspection():
@@ -60,6 +84,20 @@ def test_prompt_injection_inspection():
     for safe in safe_prompts:
         is_suspicious, _ = security_service.inspect_prompt_injection(safe)
         assert is_suspicious is False
+
+
+def test_rag_prompt_xml_containerization():
+    """Verify RAG prompt construction isolates context in immutable XML tags."""
+    messages = rag_service.build_prompt_messages(
+        query="What is the revenue growth?",
+        context="Quarterly revenue grew by 28% year-over-year.",
+    )
+
+    assert len(messages) == 2
+    user_content = messages[1]["content"]
+    assert '<document_context security_boundary="immutable">' in user_content
+    assert "<user_question>" in user_content
+    assert "28% year-over-year" in user_content
 
 
 def test_in_memory_rate_limiter_logic():

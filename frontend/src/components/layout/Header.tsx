@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Sparkles, Database, FileText, Trash2, Code2, Cpu, ShieldCheck } from 'lucide-react';
+import { Sparkles, Database, FileText, Trash2, Code2, Cpu, ShieldCheck, Lock } from 'lucide-react';
 import { checkBackendHealth } from '@/lib/api';
 
 interface HeaderProps {
@@ -24,12 +24,12 @@ export function Header({ documentCount, selectedCount, onClearChat }: HeaderProp
   }, []);
 
   return (
-    <header className="h-16 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md px-6 flex items-center justify-between z-30 sticky top-0">
+    <header className="h-16 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md px-6 flex items-center justify-between z-30 sticky top-0">
       {/* Brand & Project Identity */}
       <div className="flex items-center space-x-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-violet-600 to-cyan-400 p-[1px] shadow-lg shadow-indigo-500/20">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-violet-600 to-cyan-400 p-[1px] shadow-lg shadow-indigo-500/20">
           <div className="w-full h-full bg-slate-950 rounded-xl flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-indigo-400" />
+            <Sparkles className="w-5 h-5 text-indigo-400 animate-pulse" />
           </div>
         </div>
         <div>
@@ -40,22 +40,31 @@ export function Header({ documentCount, selectedCount, onClearChat }: HeaderProp
             </span>
           </div>
           <p className="text-xs text-slate-400 flex items-center space-x-1.5">
-            <span>FastAPI & Next.js RAG Platform</span>
+            <span>FastAPI & Next.js Engine</span>
             <span>•</span>
             <span className="text-emerald-400 flex items-center">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse" />
-              Grounded AI
+              Grounded & Hardened
             </span>
           </p>
         </div>
       </div>
 
-      {/* Model, DB & System Status Pills */}
-      <div className="hidden md:flex items-center space-x-3">
+      {/* Model, DB, Security & System Status Pills */}
+      <div className="hidden lg:flex items-center space-x-2.5">
+        {/* Security Guardrail Pill */}
+        <div 
+          className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/30 border border-emerald-800/50 text-xs text-emerald-400 shadow-sm"
+          title="Active Guardrails: Magic Byte Validation, Rate Limiting, Prompt Injection Defense, PII Masking"
+        >
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+          <span className="font-medium">OWASP Hardened</span>
+        </div>
+
         {/* Model Spec */}
         <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900/90 border border-slate-800 text-xs text-slate-300">
           <Cpu className="w-3.5 h-3.5 text-violet-400" />
-          <span className="text-slate-400">LLM:</span>
+          <span className="text-slate-400">Model:</span>
           <span className="font-medium text-slate-200">GPT-4o-mini</span>
         </div>
 
@@ -99,7 +108,7 @@ export function Header({ documentCount, selectedCount, onClearChat }: HeaderProp
         <button
           onClick={onClearChat}
           title="Clear Conversation"
-          className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 rounded-lg transition-all"
+          className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 rounded-lg transition-all shadow-sm"
         >
           <Trash2 className="w-3.5 h-3.5" />
           <span>Clear Chat</span>
@@ -109,7 +118,7 @@ export function Header({ documentCount, selectedCount, onClearChat }: HeaderProp
           href="https://github.com/Muneeb786-hub/AI-Document-Chat-RAG"
           target="_blank"
           rel="noreferrer"
-          className="p-2 text-slate-400 hover:text-white bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 rounded-lg transition-all"
+          className="p-2 text-slate-400 hover:text-white bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 rounded-lg transition-all shadow-sm"
           title="View Source on GitHub"
         >
           <Code2 className="w-4 h-4" />
