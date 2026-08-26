@@ -52,6 +52,8 @@ export default function Home() {
       <Header
         documentCount={documents.length}
         selectedCount={selectedDocIds.length}
+        messages={messages}
+        documents={documents}
         onClearChat={clearChat}
       />
 

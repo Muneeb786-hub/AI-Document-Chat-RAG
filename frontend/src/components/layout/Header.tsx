@@ -1,17 +1,42 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Sparkles, Database, FileText, Trash2, Code2, Cpu, ShieldCheck, Lock } from 'lucide-react';
+import React, { useEffect, useState, useRef } from 'react';
+import {
+  Sparkles,
+  Database,
+  FileText,
+  Trash2,
+  Code2,
+  Cpu,
+  ShieldCheck,
+  Download,
+  FileDown,
+  Printer,
+  ChevronDown,
+} from 'lucide-react';
 import { checkBackendHealth } from '@/lib/api';
+import { ChatMessage } from '@/types/chat';
+import { DocumentItem } from '@/types/document';
+import { exportChatAsMarkdown, exportChatAsJSON, exportChatAsPDF } from '@/lib/export';
 
 interface HeaderProps {
   documentCount: number;
   selectedCount: number;
+  messages: ChatMessage[];
+  documents: DocumentItem[];
   onClearChat: () => void;
 }
 
-export function Header({ documentCount, selectedCount, onClearChat }: HeaderProps) {
+export function Header({
+  documentCount,
+  selectedCount,
+  messages,
+  documents,
+  onClearChat,
+}: HeaderProps) {
   const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function verifyHealth() {
@@ -22,6 +47,19 @@ export function Header({ documentCount, selectedCount, onClearChat }: HeaderProp
     const interval = setInterval(verifyHealth, 15000);
     return () => clearInterval(interval);
   }, []);
+
+  // Close export dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
+        setIsExportOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const hasMessages = messages.length > 0;
 
   return (
     <header className="h-16 border-b border-slate-800/80 bg-slate-950/90 backdrop-blur-md px-6 flex items-center justify-between z-30 sticky top-0">
@@ -53,7 +91,7 @@ export function Header({ documentCount, selectedCount, onClearChat }: HeaderProp
       {/* Model, DB, Security & System Status Pills */}
       <div className="hidden lg:flex items-center space-x-2.5">
         {/* Security Guardrail Pill */}
-        <div 
+        <div
           className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/30 border border-emerald-800/50 text-xs text-emerald-400 shadow-sm"
           title="Active Guardrails: Magic Byte Validation, Rate Limiting, Prompt Injection Defense, PII Masking"
         >
@@ -103,17 +141,74 @@ export function Header({ documentCount, selectedCount, onClearChat }: HeaderProp
         </div>
       </div>
 
-      {/* Actions */}
+      {/* Actions: Export, Clear, Source */}
       <div className="flex items-center space-x-2">
+        {/* Export Dropdown */}
+        <div className="relative" ref={exportMenuRef}>
+          <button
+            onClick={() => setIsExportOpen((prev) => !prev)}
+            disabled={!hasMessages}
+            className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-all shadow-sm ${
+              hasMessages
+                ? 'text-slate-200 bg-slate-900/90 hover:bg-slate-800 border-slate-700 hover:border-slate-600'
+                : 'text-slate-600 bg-slate-950/40 border-slate-900 cursor-not-allowed opacity-50'
+            }`}
+            title={hasMessages ? 'Export research report' : 'No messages to export'}
+          >
+            <Download className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Export</span>
+            <ChevronDown className="w-3 h-3 text-slate-400" />
+          </button>
+
+          {isExportOpen && hasMessages && (
+            <div className="absolute right-0 mt-2 w-48 rounded-xl bg-slate-900 border border-slate-800 shadow-xl p-1.5 z-50 space-y-1 backdrop-blur-md">
+              <button
+                onClick={() => {
+                  exportChatAsMarkdown(messages, documents);
+                  setIsExportOpen(false);
+                }}
+                className="w-full flex items-center space-x-2 px-2.5 py-2 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors text-left"
+              >
+                <FileDown className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Markdown Report (.md)</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  exportChatAsJSON(messages, documents);
+                  setIsExportOpen(false);
+                }}
+                className="w-full flex items-center space-x-2 px-2.5 py-2 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors text-left"
+              >
+                <Database className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Structured JSON (.json)</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  exportChatAsPDF(messages, documents);
+                  setIsExportOpen(false);
+                }}
+                className="w-full flex items-center space-x-2 px-2.5 py-2 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition-colors text-left"
+              >
+                <Printer className="w-3.5 h-3.5 text-violet-400" />
+                <span>Print / Save as PDF</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Clear Chat */}
         <button
           onClick={onClearChat}
           title="Clear Conversation"
           className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 bg-slate-900/60 hover:bg-slate-800/80 border border-slate-800 rounded-lg transition-all shadow-sm"
         >
           <Trash2 className="w-3.5 h-3.5" />
-          <span>Clear Chat</span>
+          <span>Clear</span>
         </button>
 
+        {/* GitHub Source Link */}
         <a
           href="https://github.com/Muneeb786-hub/AI-Document-Chat-RAG"
           target="_blank"
