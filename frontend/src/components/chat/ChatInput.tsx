@@ -1,7 +1,17 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Square, Sparkles, AlertCircle, ArrowUp, Compass } from 'lucide-react';
+import {
+  Send,
+  Square,
+  Sparkles,
+  AlertCircle,
+  ArrowUp,
+  Compass,
+  Mic,
+  MicOff,
+  Layers,
+} from 'lucide-react';
 
 interface ChatInputProps {
   onSendMessage: (text: string) => void;
@@ -23,7 +33,9 @@ export function ChatInput({
   selectedDocCount,
 }: ChatInputProps) {
   const [input, setInput] = useState('');
+  const [isListening, setIsListening] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   // Auto resize textarea
   useEffect(() => {
@@ -33,9 +45,57 @@ export function ChatInput({
     }
   }, [input]);
 
+  // Initialize Web Speech API
+  useEffect(() => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0].transcript)
+          .join('');
+        setInput((prev) => `${prev} ${transcript}`.trim());
+      };
+
+      recognition.onerror = () => {
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  const toggleVoiceInput = () => {
+    if (!recognitionRef.current) return;
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (err) {
+        setIsListening(false);
+      }
+    }
+  };
+
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!input.trim() || isStreaming) return;
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
     onSendMessage(input.trim());
     setInput('');
     if (textareaRef.current) {
@@ -59,7 +119,7 @@ export function ChatInput({
   };
 
   return (
-    <div className="relative border-t border-slate-800/80 bg-slate-950/80 backdrop-blur-md p-4 space-y-2.5">
+    <div className="relative border-t border-slate-800/80 bg-slate-950/80 backdrop-blur-xl p-4 space-y-2.5">
       {/* Quick Prompt Suggestions */}
       {selectedDocCount > 0 && !input && !isStreaming && (
         <div className="flex items-center space-x-2 overflow-x-auto pb-1 custom-scrollbar">
@@ -83,15 +143,15 @@ export function ChatInput({
       {/* Warning if no documents are selected */}
       {selectedDocCount === 0 && (
         <div className="flex items-center space-x-1.5 text-amber-400/90 text-xs px-1">
-          <AlertCircle className="w-3.5 h-3.5" />
-          <span>No documents selected. Please check at least one document in the sidebar to query.</span>
+          <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+          <span>No documents selected. Please select at least one document from the corpus.</span>
         </div>
       )}
 
       {/* Input Form Box */}
       <form
         onSubmit={handleSubmit}
-        className="relative flex items-end bg-slate-900/90 border border-slate-800 focus-within:border-indigo-500/80 rounded-2xl p-2 transition-all shadow-inner"
+        className="relative flex items-end bg-slate-900/90 border border-slate-800 focus-within:border-indigo-500/70 rounded-2xl p-2 transition-all shadow-inner backdrop-blur-sm"
       >
         <textarea
           ref={textareaRef}
@@ -109,6 +169,22 @@ export function ChatInput({
         />
 
         <div className="flex items-center space-x-1.5 pb-1 pr-1">
+          {/* Voice Input Microphone Button */}
+          {selectedDocCount > 0 && !isStreaming && (
+            <button
+              type="button"
+              onClick={toggleVoiceInput}
+              className={`p-2 rounded-xl transition-all ${
+                isListening
+                  ? 'bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+              }`}
+              title={isListening ? 'Listening... click to stop' : 'Voice dictation'}
+            >
+              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </button>
+          )}
+
           {isStreaming ? (
             <button
               type="button"
@@ -134,12 +210,23 @@ export function ChatInput({
         </div>
       </form>
 
-      {/* Footer Info */}
+      {/* Footer Info & Active Scope Pill */}
       <div className="flex items-center justify-between text-[10px] text-slate-500 px-1">
-        <span className="flex items-center space-x-1">
-          <Sparkles className="w-3 h-3 text-indigo-400" />
-          <span>Responses strictly grounded via ChromaDB semantic search</span>
-        </span>
+        <div className="flex items-center space-x-2">
+          <span className="flex items-center space-x-1">
+            <Sparkles className="w-3 h-3 text-indigo-400" />
+            <span>Strict grounding via ChromaDB</span>
+          </span>
+          {selectedDocCount > 0 && (
+            <>
+              <span>•</span>
+              <span className="flex items-center space-x-1 text-slate-400">
+                <Layers className="w-3 h-3 text-cyan-400" />
+                <span>{selectedDocCount} {selectedDocCount === 1 ? 'doc' : 'docs'} in scope</span>
+              </span>
+            </>
+          )}
+        </div>
         <span className="font-mono">Enter ↵ to send</span>
       </div>
     </div>

@@ -7,13 +7,12 @@ import {
   Sparkles,
   Highlighter,
   X,
-  ExternalLink,
   Copy,
   Check,
-  ShieldCheck,
   Code2,
-  Calendar,
   Zap,
+  Radar,
+  Compass,
 } from 'lucide-react';
 import { DocumentItem } from '@/types/document';
 import { Citation } from '@/types/chat';
@@ -27,12 +26,13 @@ interface DocumentViewerProps {
 }
 
 export function DocumentViewer({ document, activeCitation, onClose }: DocumentViewerProps) {
-  const [activeTab, setActiveTab] = useState<'info' | 'chunks' | 'json'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'chunks' | 'json' | 'vector'>('info');
   const [copied, setCopied] = useState(false);
   const [extractedJson, setExtractedJson] = useState<Record<string, any> | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [selectedVectorIndex, setSelectedVectorIndex] = useState<number | null>(null);
 
-  // Switch to info/chunks automatically if citation changes
+  // Switch to chunks automatically if citation changes
   useEffect(() => {
     if (activeCitation) {
       setActiveTab('chunks');
@@ -85,6 +85,15 @@ export function DocumentViewer({ document, activeCitation, onClose }: DocumentVi
     }
   };
 
+  // Mock 2D spatial coordinates for vector visualizer
+  const vectorNodes = [
+    { id: 1, x: 50, y: 35, score: 0.94, page: 1, text: 'Self-attention mechanism and scaled dot-product formula.' },
+    { id: 2, x: 75, y: 60, score: 0.91, page: 2, text: 'Multi-head projection layers across d_k and d_v dimensions.' },
+    { id: 3, x: 25, y: 70, score: 0.88, page: 3, text: 'Position-wise feed-forward networks with sinusoidal encodings.' },
+    { id: 4, x: 80, y: 25, score: 0.85, page: 4, text: 'WMT 2014 translation BLEU benchmarks and training hardware.' },
+    { id: 5, x: 30, y: 20, score: 0.82, page: 4, text: 'Conclusion and future research directions on sequence modeling.' },
+  ];
+
   return (
     <div className="h-full flex flex-col border-l border-slate-800/80 bg-slate-950/60 backdrop-blur-sm">
       {/* Viewer Header */}
@@ -132,10 +141,10 @@ export function DocumentViewer({ document, activeCitation, onClose }: DocumentVi
       )}
 
       {/* Navigation Tabs */}
-      <div className="flex border-b border-slate-800/80 px-4 text-xs font-semibold">
+      <div className="flex border-b border-slate-800/80 px-2 text-xs font-semibold overflow-x-auto custom-scrollbar">
         <button
           onClick={() => setActiveTab('info')}
-          className={`py-3 px-3 border-b-2 transition-colors ${
+          className={`py-3 px-2.5 border-b-2 transition-colors shrink-0 ${
             activeTab === 'info'
               ? 'border-indigo-500 text-indigo-400'
               : 'border-transparent text-slate-400 hover:text-slate-200'
@@ -145,23 +154,33 @@ export function DocumentViewer({ document, activeCitation, onClose }: DocumentVi
         </button>
         <button
           onClick={() => setActiveTab('chunks')}
-          className={`py-3 px-3 border-b-2 transition-colors ${
+          className={`py-3 px-2.5 border-b-2 transition-colors shrink-0 ${
             activeTab === 'chunks'
               ? 'border-indigo-500 text-indigo-400'
               : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          Vector Chunks
+          Chunks
         </button>
         <button
-          onClick={() => setActiveTab('json')}
-          className={`py-3 px-3 border-b-2 transition-colors ${
-            activeTab === 'json'
+          onClick={() => setActiveTab('vector')}
+          className={`py-3 px-2.5 border-b-2 transition-colors shrink-0 ${
+            activeTab === 'vector'
               ? 'border-cyan-400 text-cyan-400'
               : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          Structured JSON
+          Vector Space
+        </button>
+        <button
+          onClick={() => setActiveTab('json')}
+          className={`py-3 px-2.5 border-b-2 transition-colors shrink-0 ${
+            activeTab === 'json'
+              ? 'border-indigo-400 text-indigo-300'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          JSON
         </button>
       </div>
 
@@ -249,6 +268,81 @@ export function DocumentViewer({ document, activeCitation, onClose }: DocumentVi
                 </p>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* 2D Vector Space Visualizer Canvas */}
+        {activeTab === 'vector' && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-slate-300 flex items-center space-x-1.5">
+                <Radar className="w-3.5 h-3.5 text-cyan-400" />
+                <span>2D Embedding Topology</span>
+              </span>
+              <span className="text-[10px] text-slate-500 font-mono">ChromaDB Cosine Map</span>
+            </div>
+
+            {/* SVG Visualizer Canvas */}
+            <div className="relative w-full h-56 bg-slate-950/80 rounded-2xl border border-slate-800/80 p-3 overflow-hidden shadow-inner flex items-center justify-center">
+              {/* Radar Grid Circles */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+                <div className="w-44 h-44 rounded-full border border-cyan-500/40" />
+                <div className="absolute w-28 h-28 rounded-full border border-indigo-500/40" />
+                <div className="absolute w-12 h-12 rounded-full border border-slate-500/40" />
+              </div>
+
+              {/* Center Query Vector Anchor */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+                <div className="w-3.5 h-3.5 rounded-full bg-cyan-400 shadow-lg shadow-cyan-400/50 animate-ping" />
+                <div className="absolute w-3 h-3 rounded-full bg-cyan-300 border border-white" />
+                <span className="text-[8px] font-mono text-cyan-300 mt-2">Query</span>
+              </div>
+
+              {/* Vector Nodes */}
+              {vectorNodes.map((node, idx) => {
+                const isSelected = selectedVectorIndex === idx;
+                return (
+                  <button
+                    key={node.id}
+                    type="button"
+                    onClick={() => setSelectedVectorIndex(idx)}
+                    style={{ left: `${node.x}%`, top: `${node.y}%` }}
+                    className={`absolute -translate-x-1/2 -translate-y-1/2 p-1.5 rounded-full transition-all group ${
+                      isSelected
+                        ? 'bg-cyan-500/40 ring-2 ring-cyan-400 scale-125 z-10'
+                        : 'bg-indigo-500/20 hover:bg-indigo-500/40 border border-indigo-400/50'
+                    }`}
+                  >
+                    <div
+                      className={`w-2.5 h-2.5 rounded-full ${
+                        isSelected ? 'bg-cyan-300' : 'bg-indigo-400'
+                      }`}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Selected Node Details */}
+            {selectedVectorIndex !== null ? (
+              <div className="p-3 bg-slate-900/70 border border-slate-800 rounded-xl text-xs space-y-1 animate-in fade-in duration-150">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="font-semibold text-cyan-300">
+                    Chunk #{vectorNodes[selectedVectorIndex].id} (Page {vectorNodes[selectedVectorIndex].page})
+                  </span>
+                  <span className="text-emerald-400 font-mono font-semibold">
+                    {Math.round(vectorNodes[selectedVectorIndex].score * 100)}% Similarity
+                  </span>
+                </div>
+                <p className="text-slate-300 text-[11px] leading-relaxed">
+                  {vectorNodes[selectedVectorIndex].text}
+                </p>
+              </div>
+            ) : (
+              <p className="text-[11px] text-slate-500 text-center italic">
+                Click any vector point on the radar to inspect its similarity score and content.
+              </p>
+            )}
           </div>
         )}
 
