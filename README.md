@@ -273,12 +273,13 @@ docker compose down
 | `GET` | `/api/v1/documents/{doc_id}/chunks` | Inspect raw text chunks and page numbers for a document |
 | `DELETE`| `/api/v1/documents/{doc_id}` | Delete PDF file from disk and purge vector embeddings from ChromaDB |
 
-### Semantic Retrieval & RAG Chat
+### Semantic Retrieval, RAG Chat & Structured Extraction
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `POST` | `/api/v1/documents/query` | Execute top-$k$ semantic similarity search across document corpus |
 | `POST` | `/api/v1/chat/stream` | Stream grounded RAG responses token-by-token via Server-Sent Events (SSE) |
 | `POST` | `/api/v1/chat/query` | Synchronous RAG endpoint returning full answer, citations, and source chunks |
+| `POST` | `/api/v1/chat/extract` | Extract verified structured JSON records (metrics, entities, dates) adhering to strict schemas |
 
 #### Example: Chat Stream Request (`POST /api/v1/chat/stream`)
 ```json

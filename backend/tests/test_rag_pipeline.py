@@ -73,5 +73,19 @@ async def test_chat_query_and_stream_endpoints():
         assert "data: {" in body_text
         assert "data: [DONE]" in body_text
 
-        # 4. Clean up
+        # 4. Test Structured JSON Extraction Endpoint
+        extract_payload = {
+            "query": "Extract key findings and translation metrics.",
+            "document_ids": [doc_id],
+            "top_k": 2,
+            "schema_type": "general_metrics",
+        }
+        extract_res = await client.post(f"{settings.API_V1_STR}/chat/extract", json=extract_payload)
+        assert extract_res.status_code == 200
+        extract_data = extract_res.json()
+        assert "extracted_data" in extract_data
+        assert isinstance(extract_data["extracted_data"], dict)
+        assert len(extract_data["citations"]) > 0
+
+        # 5. Clean up
         await client.delete(f"{settings.API_V1_STR}/documents/{doc_id}")

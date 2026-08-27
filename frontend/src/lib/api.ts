@@ -14,6 +14,13 @@ export interface QueryStreamPayload {
   top_k?: number;
 }
 
+export interface StructuredExtractionResult {
+  query: string;
+  schema_type: string;
+  extracted_data: Record<string, any>;
+  citations: Citation[];
+}
+
 /**
  * Check backend health status
  */
@@ -87,5 +94,31 @@ export async function fetchDocumentChunks(docId: string) {
     method: 'GET',
   });
   if (!res.ok) throw new Error('Failed to fetch document chunks');
+  return await res.json();
+}
+
+/**
+ * Extract structured JSON records from document context
+ */
+export async function extractStructuredData(
+  query: string,
+  documentIds?: string[],
+  topK: number = 4
+): Promise<StructuredExtractionResult> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/chat/extract`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query,
+      document_ids: documentIds,
+      top_k: topK,
+      schema_type: 'general_metrics',
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error('Structured JSON extraction failed');
+  }
+
   return await res.json();
 }

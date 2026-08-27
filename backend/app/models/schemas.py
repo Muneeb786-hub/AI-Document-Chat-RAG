@@ -102,3 +102,20 @@ class DocumentDeleteResponse(BaseModel):
     """Response payload returned upon document deletion."""
     message: str
     doc_id: str
+
+
+class StructuredExtractionRequest(BaseModel):
+    """Request payload for extracting structured JSON records from document context."""
+    query: str = Field(..., min_length=1, description="Extraction objective or query")
+    document_ids: Optional[List[str]] = Field(default=None, description="Active document UUIDs to scope retrieval")
+    top_k: int = Field(default=4, ge=1, le=15, description="Number of context chunks to retrieve")
+    schema_type: str = Field(default="general_metrics", description="Target JSON schema structure: 'general_metrics', 'entities', or 'executive_summary'")
+
+
+class StructuredExtractionResponse(BaseModel):
+    """Response payload containing validated structured JSON output and citations."""
+    query: str
+    schema_type: str
+    extracted_data: Dict[str, Any] = Field(default_factory=dict, description="Parsed structured JSON key-value records")
+    citations: List[ChatCitation] = Field(default_factory=list)
+    chunks: List[DocumentChunk] = Field(default_factory=list)
