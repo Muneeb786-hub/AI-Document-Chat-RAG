@@ -8,7 +8,7 @@
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python)](https://www.python.org/)
 [![ChromaDB](https://img.shields.io/badge/Vector_DB-ChromaDB-FF4F00)](https://www.trychroma.com/)
 [![OpenAI](https://img.shields.io/badge/LLM-GPT--4o--mini-412991?logo=openai)](https://openai.com/)
-[![Pytest](https://img.shields.io/badge/Tests-Pytest%2022%2F22%20Passed-green?logo=pytest)](https://docs.pytest.org/)
+[![Pytest](https://img.shields.io/badge/Tests-Pytest%2023%2F23%20Passed-green?logo=pytest)](https://docs.pytest.org/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://www.docker.com/)
 
 A production-grade, full-stack **Retrieval-Augmented Generation (RAG)** system designed to ingest, chunk, embed, and semantically query multi-page PDF documents. Features an interactive Next.js 14 split-pane workspace, low-latency Server-Sent Events (SSE) token streaming, citation grounding with page-level verification, and enterprise-grade security hardening.
@@ -47,6 +47,8 @@ Standard Large Language Models struggle with knowledge boundaries and hallucinat
 ## ✨ Key Features
 
 - 📄 **Page-Aware PDF Ingestion**: Extracts text page-by-page using PyMuPDF, tracking total characters, words, and document layout metadata.
+- ⚡ **1-Click Demo Document Loader**: Built-in sample technical specification (*"Attention Is All You Need"*) for immediate evaluation without locating a file.
+- ⚖️ **Cross-Document Comparative Analysis**: Select two or more documents in the corpus to generate structured, side-by-side comparative matrices with source citations.
 - 🛡️ **Multi-Layer Security Hardening**: Binary magic byte header verification, path traversal prevention, sliding-window rate limiting, and prompt injection defense.
 - ✂️ **Sliding-Window Recursive Chunking**: Segments text along natural paragraph and sentence boundaries with configurable overlap (`CHUNK_SIZE = 1000`, `CHUNK_OVERLAP = 150`) to avoid context truncation.
 - 🧠 **Decoupled Provider Architecture**: Abstract base classes (`BaseEmbeddingService`, `BaseLLMService`) decouple application logic from third-party APIs, enabling drop-in local model replacement (Ollama, FastEmbed, vLLM).
@@ -265,10 +267,12 @@ docker compose down
 
 ## 📡 REST & Streaming API Reference
 
-### Document Management
+### Document Management & Comparative Analysis
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
 | `POST` | `/api/v1/documents/upload` | Upload PDF file, extract text, segment chunks, and index vectors in ChromaDB |
+| `POST` | `/api/v1/documents/sample` | Ingest and index built-in sample technical specification paper for instant evaluation |
+| `POST` | `/api/v1/documents/compare` | Execute cross-document comparative analysis across multiple selected documents |
 | `GET` | `/api/v1/documents` | List all indexed documents with page counts and chunk statistics |
 | `GET` | `/api/v1/documents/{doc_id}/chunks` | Inspect raw text chunks and page numbers for a document |
 | `DELETE`| `/api/v1/documents/{doc_id}` | Delete PDF file from disk and purge vector embeddings from ChromaDB |

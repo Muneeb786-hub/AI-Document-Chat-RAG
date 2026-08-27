@@ -102,3 +102,46 @@ async def test_multi_document_corpus_and_lifecycle():
 
         # 6. Clean up Document B
         await client.delete(f"{settings.API_V1_STR}/documents/{doc_b_id}")
+
+
+@pytest.mark.asyncio
+async def test_sample_document_and_comparison_endpoints():
+    """Verify loading demo technical document and running cross-document comparison."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # 1. Load Sample Document
+        sample_res = await client.post(f"{settings.API_V1_STR}/documents/sample")
+        assert sample_res.status_code == 201
+        sample_doc = sample_res.json()["document"]
+        doc_1_id = sample_doc["id"]
+        assert sample_doc["page_count"] == 4
+        assert sample_doc["chunk_count"] > 0
+
+        # 2. Ingest a Second Document for Comparison
+        doc_2_bytes = create_custom_pdf(
+            "recurrent_models.pdf",
+            [
+                "Recurrent neural networks such as LSTMs and GRUs process sequential data step-by-step with gating mechanisms."
+            ],
+        )
+        files_2 = {"file": ("recurrent_models.pdf", io.BytesIO(doc_2_bytes), "application/pdf")}
+        res_2 = await client.post(f"{settings.API_V1_STR}/documents/upload", files=files_2)
+        assert res_2.status_code == 201
+        doc_2_id = res_2.json()["document"]["id"]
+
+        # 3. Test Cross-Document Comparison Endpoint
+        compare_payload = {
+            "document_ids": [doc_1_id, doc_2_id],
+            "comparison_topic": "Attention mechanisms vs recurrent models",
+            "top_k_per_doc": 2,
+        }
+        comp_res = await client.post(f"{settings.API_V1_STR}/documents/compare", json=compare_payload)
+        assert comp_res.status_code == 200
+        comp_data = comp_res.json()
+        assert "summary" in comp_data
+        assert len(comp_data["comparison_matrix"]) > 0
+        assert len(comp_data["documents_analyzed"]) == 2
+
+        # 4. Clean up
+        await client.delete(f"{settings.API_V1_STR}/documents/{doc_1_id}")
+        await client.delete(f"{settings.API_V1_STR}/documents/{doc_2_id}")

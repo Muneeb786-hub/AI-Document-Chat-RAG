@@ -11,6 +11,8 @@ import {
   Layers,
   FileCheck2,
   Calendar,
+  Scale,
+  ArrowRight,
 } from 'lucide-react';
 import { DocumentItem } from '@/types/document';
 import { formatBytes, formatTimeAgo } from '@/lib/utils';
@@ -24,6 +26,7 @@ interface DocumentListProps {
   onClearAll: () => void;
   onSelectPreview: (doc: DocumentItem) => void;
   onDelete: (id: string) => Promise<void>;
+  onCompareSelected?: () => void;
 }
 
 export function DocumentList({
@@ -35,6 +38,7 @@ export function DocumentList({
   onClearAll,
   onSelectPreview,
   onDelete,
+  onCompareSelected,
 }: DocumentListProps) {
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -72,6 +76,21 @@ export function DocumentList({
         )}
       </div>
 
+      {/* Multi-Document Compare Action Banner */}
+      {selectedDocIds.length >= 2 && onCompareSelected && (
+        <button
+          type="button"
+          onClick={onCompareSelected}
+          className="w-full flex items-center justify-between px-3 py-2 bg-gradient-to-r from-cyan-950/50 via-indigo-950/50 to-slate-900/80 hover:from-cyan-900/70 hover:to-indigo-900/70 border border-cyan-500/40 rounded-xl text-xs font-semibold text-cyan-300 hover:text-white transition-all shadow-sm group"
+        >
+          <div className="flex items-center space-x-2">
+            <Scale className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
+            <span>Compare Selected ({selectedDocIds.length})</span>
+          </div>
+          <ArrowRight className="w-3.5 h-3.5 text-cyan-400 group-hover:translate-x-0.5 transition-transform" />
+        </button>
+      )}
+
       {/* Search Bar */}
       {documents.length > 3 && (
         <div className="relative">
@@ -93,7 +112,7 @@ export function DocumentList({
             <FileText className="w-8 h-8 text-slate-600 mx-auto mb-2 opacity-50" />
             <p className="text-xs font-medium text-slate-400">No documents in corpus</p>
             <p className="text-[11px] text-slate-600 mt-0.5">
-              Upload a PDF to index chunks and begin RAG queries.
+              Upload a PDF or load the demo spec to begin RAG queries.
             </p>
           </div>
         ) : (

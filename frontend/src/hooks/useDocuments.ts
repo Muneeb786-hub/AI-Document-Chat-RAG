@@ -1,16 +1,14 @@
-'use client';
-
 import { useState, useEffect, useCallback } from 'react';
 import { DocumentItem } from '@/types/document';
-import { fetchDocuments, uploadPdf, deleteDocumentApi } from '@/lib/api';
+import { fetchDocuments, uploadPdf, deleteDocumentApi, loadSampleDocumentApi } from '@/lib/api';
 
 const INITIAL_DEMO_DOC: DocumentItem = {
   id: 'demo-rag-primer',
-  filename: 'attention_is_all_you_need.pdf',
+  filename: 'attention_transformer_spec.pdf',
   original_filename: 'Attention Is All You Need (Vaswani et al.).pdf',
   file_size_bytes: 2215000,
-  page_count: 15,
-  chunk_count: 42,
+  page_count: 4,
+  chunk_count: 12,
   created_at: new Date().toISOString(),
   status: 'ready',
   summary: 'Seminal paper introducing the Transformer architecture, multi-head self-attention mechanisms, and sequence-to-sequence modeling.',
@@ -63,7 +61,6 @@ export function useDocuments() {
     setUploadingFiles((prev) => [...prev, { filename: tempName, progress: 15 }]);
 
     try {
-      // Step update
       setUploadingFiles((prev) =>
         prev.map((item) => (item.filename === tempName ? { ...item, progress: 60 } : item))
       );
@@ -79,7 +76,6 @@ export function useDocuments() {
       setActivePreviewDoc(newDoc);
     } catch (err: any) {
       console.error('Upload error:', err);
-      // Fallback local document entry for seamless UI evaluation if backend is in setup
       const localDoc: DocumentItem = {
         id: `doc-${Date.now()}`,
         filename: file.name,
@@ -98,6 +94,20 @@ export function useDocuments() {
       setTimeout(() => {
         setUploadingFiles((prev) => prev.filter((item) => item.filename !== tempName));
       }, 800);
+    }
+  };
+
+  const handleLoadSample = async () => {
+    setIsLoading(true);
+    try {
+      const sampleDoc = await loadSampleDocumentApi();
+      setDocuments((prev) => [sampleDoc, ...prev.filter((d) => d.id !== sampleDoc.id)]);
+      setSelectedDocIds((prev) => (prev.includes(sampleDoc.id) ? prev : [...prev, sampleDoc.id]));
+      setActivePreviewDoc(sampleDoc);
+    } catch (err: any) {
+      console.warn('Could not load sample from backend:', err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -127,6 +137,7 @@ export function useDocuments() {
     selectAllDocuments,
     clearDocumentSelection,
     handleUpload,
+    handleLoadSample,
     handleDelete,
     refreshDocuments,
   };

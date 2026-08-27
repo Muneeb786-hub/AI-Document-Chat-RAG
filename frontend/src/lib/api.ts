@@ -21,6 +21,20 @@ export interface StructuredExtractionResult {
   citations: Citation[];
 }
 
+export interface ComparisonAspectResult {
+  aspect: string;
+  document_details: Record<string, string>;
+  key_contrast: string;
+}
+
+export interface DocumentCompareResult {
+  comparison_topic: string;
+  summary: string;
+  comparison_matrix: ComparisonAspectResult[];
+  documents_analyzed: string[];
+  citations: Citation[];
+}
+
 /**
  * Check backend health status
  */
@@ -77,6 +91,22 @@ export async function uploadPdf(file: File): Promise<DocumentItem> {
 }
 
 /**
+ * Load built-in sample technical specification PDF
+ */
+export async function loadSampleDocumentApi(): Promise<DocumentItem> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/documents/sample`, {
+    method: 'POST',
+  });
+
+  if (!res.ok) {
+    throw new Error('Failed to load sample document.');
+  }
+
+  const data = await res.json();
+  return data.document;
+}
+
+/**
  * Delete a document from backend storage and ChromaDB
  */
 export async function deleteDocumentApi(docId: string): Promise<boolean> {
@@ -118,6 +148,30 @@ export async function extractStructuredData(
 
   if (!res.ok) {
     throw new Error('Structured JSON extraction failed');
+  }
+
+  return await res.json();
+}
+
+/**
+ * Execute cross-document comparative analysis across multiple documents
+ */
+export async function compareDocumentsApi(
+  documentIds: string[],
+  topic?: string
+): Promise<DocumentCompareResult> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/documents/compare`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      document_ids: documentIds,
+      comparison_topic: topic || 'Key findings, methodology, and performance metrics',
+      top_k_per_doc: 3,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error('Cross-document comparison failed');
   }
 
   return await res.json();

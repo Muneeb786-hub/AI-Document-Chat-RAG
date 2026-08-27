@@ -21,6 +21,7 @@ export default function Home() {
     selectAllDocuments,
     clearDocumentSelection,
     handleUpload,
+    handleLoadSample,
     handleDelete,
   } = useDocuments();
 
@@ -46,6 +47,19 @@ export default function Home() {
     }
   };
 
+  // Cross-document comparative query trigger
+  const handleCompareSelected = () => {
+    if (selectedDocIds.length < 2) return;
+    const selectedNames = documents
+      .filter((d) => selectedDocIds.includes(d.id))
+      .map((d) => d.original_filename || d.filename)
+      .join(', ');
+
+    sendMessage(
+      `Perform a comprehensive comparative analysis between the selected documents (${selectedNames}). Detail key differences, architectural approaches, and quantitative metrics in a side-by-side format.`
+    );
+  };
+
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-[#090d16]">
       {/* Top Navigation Bar */}
@@ -66,6 +80,7 @@ export default function Home() {
           activePreviewDoc={activePreviewDoc}
           uploadingFiles={uploadingFiles}
           onUpload={handleUpload}
+          onLoadSample={handleLoadSample}
           onToggleSelect={toggleDocumentSelection}
           onSelectAll={selectAllDocuments}
           onClearAll={clearDocumentSelection}
@@ -75,6 +90,7 @@ export default function Home() {
             setIsInspectorOpen(true);
           }}
           onDelete={handleDelete}
+          onCompareSelected={handleCompareSelected}
         />
 
         {/* Center Main: Interactive Chat Feed */}

@@ -12,11 +12,13 @@ interface SidebarProps {
   activePreviewDoc: DocumentItem | null;
   uploadingFiles: { filename: string; progress: number }[];
   onUpload: (file: File) => Promise<void>;
+  onLoadSample?: () => Promise<void>;
   onToggleSelect: (id: string) => void;
   onSelectAll: () => void;
   onClearAll: () => void;
   onSelectPreview: (doc: DocumentItem) => void;
   onDelete: (id: string) => Promise<void>;
+  onCompareSelected?: () => void;
 }
 
 export function Sidebar({
@@ -25,11 +27,13 @@ export function Sidebar({
   activePreviewDoc,
   uploadingFiles,
   onUpload,
+  onLoadSample,
   onToggleSelect,
   onSelectAll,
   onClearAll,
   onSelectPreview,
   onDelete,
+  onCompareSelected,
 }: SidebarProps) {
   return (
     <aside className="w-80 md:w-88 border-r border-slate-800/80 bg-slate-950/70 flex flex-col h-[calc(100vh-4rem)] p-4 space-y-4 shrink-0 overflow-hidden">
@@ -38,7 +42,11 @@ export function Sidebar({
         <h2 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
           Document Ingestion
         </h2>
-        <DocumentUpload onUpload={onUpload} uploadingFiles={uploadingFiles} />
+        <DocumentUpload
+          onUpload={onUpload}
+          onLoadSample={onLoadSample}
+          uploadingFiles={uploadingFiles}
+        />
       </div>
 
       {/* Document Library / Corpus */}
@@ -52,6 +60,7 @@ export function Sidebar({
           onClearAll={onClearAll}
           onSelectPreview={onSelectPreview}
           onDelete={onDelete}
+          onCompareSelected={onCompareSelected}
         />
       </div>
 

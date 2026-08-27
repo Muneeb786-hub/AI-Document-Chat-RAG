@@ -119,3 +119,26 @@ class StructuredExtractionResponse(BaseModel):
     extracted_data: Dict[str, Any] = Field(default_factory=dict, description="Parsed structured JSON key-value records")
     citations: List[ChatCitation] = Field(default_factory=list)
     chunks: List[DocumentChunk] = Field(default_factory=list)
+
+
+class DocumentCompareRequest(BaseModel):
+    """Request payload for comparing findings and metrics across multiple documents."""
+    document_ids: List[str] = Field(..., min_length=2, description="List of at least two document UUIDs to compare")
+    comparison_topic: Optional[str] = Field(default="Key findings, methodology, and quantitative performance metrics", description="Focus topic for comparative breakdown")
+    top_k_per_doc: int = Field(default=3, ge=1, le=10, description="Number of context chunks to retrieve per document")
+
+
+class ComparisonAspect(BaseModel):
+    """Individual comparison point across analyzed documents."""
+    aspect: str = Field(..., description="Topic or metric evaluated")
+    document_details: Dict[str, str] = Field(..., description="Findings per document name")
+    key_contrast: str = Field(..., description="Summary of key difference or takeaway")
+
+
+class DocumentCompareResponse(BaseModel):
+    """Response payload containing side-by-side comparative analysis and grounded citations."""
+    comparison_topic: str
+    summary: str
+    comparison_matrix: List[ComparisonAspect] = Field(default_factory=list)
+    documents_analyzed: List[str] = Field(default_factory=list)
+    citations: List[ChatCitation] = Field(default_factory=list)
