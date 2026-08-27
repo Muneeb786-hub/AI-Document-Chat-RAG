@@ -13,6 +13,11 @@ import {
   Zap,
   Radar,
   Compass,
+  BookOpen,
+  ChevronLeft,
+  ChevronRight,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 import { DocumentItem } from '@/types/document';
 import { Citation } from '@/types/chat';
@@ -26,16 +31,21 @@ interface DocumentViewerProps {
 }
 
 export function DocumentViewer({ document, activeCitation, onClose }: DocumentViewerProps) {
-  const [activeTab, setActiveTab] = useState<'info' | 'chunks' | 'json' | 'vector'>('info');
+  const [activeTab, setActiveTab] = useState<'pages' | 'info' | 'chunks' | 'vector' | 'json'>('pages');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [copied, setCopied] = useState(false);
   const [extractedJson, setExtractedJson] = useState<Record<string, any> | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [selectedVectorIndex, setSelectedVectorIndex] = useState<number | null>(null);
 
-  // Switch to chunks automatically if citation changes
+  // Switch to pages tab and jump to cited page if citation clicked
   useEffect(() => {
     if (activeCitation) {
-      setActiveTab('chunks');
+      setActiveTab('pages');
+      if (activeCitation.page_number) {
+        setCurrentPage(activeCitation.page_number);
+      }
     }
   }, [activeCitation]);
 
@@ -45,7 +55,7 @@ export function DocumentViewer({ document, activeCitation, onClose }: DocumentVi
         <FileText className="w-10 h-10 text-slate-600 mb-3 opacity-40" />
         <h3 className="text-xs font-bold text-slate-300">Document Inspector</h3>
         <p className="text-[11px] text-slate-500 mt-1 max-w-[220px]">
-          Select any document or click a grounded citation in chat to inspect parsed vectors and metadata.
+          Select any document or click a grounded citation in chat to inspect parsed vectors, pages, and metadata.
         </p>
       </div>
     );
@@ -93,6 +103,33 @@ export function DocumentViewer({ document, activeCitation, onClose }: DocumentVi
     { id: 4, x: 80, y: 25, score: 0.85, page: 4, text: 'WMT 2014 translation BLEU benchmarks and training hardware.' },
     { id: 5, x: 30, y: 20, score: 0.82, page: 4, text: 'Conclusion and future research directions on sequence modeling.' },
   ];
+
+  // Document Pages Content Dictionary
+  const pageContents: Record<number, string[]> = {
+    1: [
+      'Attention Is All You Need: Technical Specification',
+      '1. Abstract & Introduction\nThe dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The Transformer proposes a model architecture eschewing recurrence and instead relying entirely on an attention mechanism to draw global dependencies between input and output.',
+      '2. Background & Motivation\nRecurrent neural networks compute hidden states sequentially along symbol positions, which inherently precludes parallelization within training examples. Attention mechanisms have become an integral part of compelling sequence modeling, allowing modeling of dependencies without regard to their distance in input or output sequences.',
+    ],
+    2: [
+      '3. Multi-Head Attention Architecture',
+      'An attention function can be described as mapping a query and a set of key-value pairs to an output. Scaled Dot-Product Attention is computed as:\nAttention(Q, K, V) = softmax(Q * K^T / sqrt(d_k)) * V.',
+      'Instead of performing a single attention function with d_model-dimensional queries, keys, and values, we found it beneficial to linearly project queries, keys, and values h times with different, learned linear projections to d_k, d_k, and d_v dimensions respectively. MultiHead(Q, K, V) = Concat(head_1, ..., head_h) * W^O.',
+    ],
+    3: [
+      '4. Position-wise Feed-Forward Networks & Positional Encoding',
+      'In addition to attention sub-layers, each of the layers in our encoder and decoder contains a fully connected feed-forward network: FFN(x) = max(0, x * W1 + b1) * W2 + b2 applied to each position separately and identically.',
+      'Since our model contains no recurrence and no convolution, in order for the model to make use of the order of the sequence, we must inject some information about the relative or absolute positions of the tokens in the sequence.\nWe use sine and cosine functions: PE(pos, 2i) = sin(pos / 10000^(2i/d_model)).',
+    ],
+    4: [
+      '5. Experimental Results & Performance Benchmarks',
+      'On the WMT 2014 English-to-German translation task, the big transformer model establishes a new state-of-the-art BLEU score of 28.4, outperforming the best existing models by over 2.0 BLEU.\nOn the WMT 2014 English-to-French translation task, our model establishes a state-of-the-art BLEU score of 41.8.',
+      '6. Conclusion & Future Directions\nThe Transformer is the first sequence transduction model based entirely on self-attention, replacing recurrent layers. Training was completed on 8 NVIDIA P100 GPUs in 3.5 days for the base model.',
+    ],
+  };
+
+  const totalPages = Math.max(document.page_count, 4);
+  const activePageParagraphs = pageContents[currentPage] || pageContents[1];
 
   return (
     <div className="h-full flex flex-col border-l border-slate-800/80 bg-slate-950/60 backdrop-blur-sm">
@@ -143,6 +180,16 @@ export function DocumentViewer({ document, activeCitation, onClose }: DocumentVi
       {/* Navigation Tabs */}
       <div className="flex border-b border-slate-800/80 px-2 text-xs font-semibold overflow-x-auto custom-scrollbar">
         <button
+          onClick={() => setActiveTab('pages')}
+          className={`py-3 px-2.5 border-b-2 transition-colors shrink-0 ${
+            activeTab === 'pages'
+              ? 'border-cyan-400 text-cyan-400'
+              : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          Page View
+        </button>
+        <button
           onClick={() => setActiveTab('info')}
           className={`py-3 px-2.5 border-b-2 transition-colors shrink-0 ${
             activeTab === 'info'
@@ -186,6 +233,96 @@ export function DocumentViewer({ document, activeCitation, onClose }: DocumentVi
 
       {/* Tab Content Body */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+        {/* Page Reader View with Marker Highlighting */}
+        {activeTab === 'pages' && (
+          <div className="space-y-3">
+            {/* Pagination and Zoom Controls Bar */}
+            <div className="flex items-center justify-between p-2 rounded-xl bg-slate-900/80 border border-slate-800 text-xs">
+              <div className="flex items-center space-x-1">
+                <button
+                  type="button"
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  title="Previous Page"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="font-semibold text-slate-200 px-1 font-mono text-[11px]">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  title="Next Page"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Zoom Controls */}
+              <div className="flex items-center space-x-1">
+                <button
+                  type="button"
+                  onClick={() => setZoomLevel((prev) => Math.max(80, prev - 15))}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                  title="Zoom Out"
+                >
+                  <ZoomOut className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-[10px] text-slate-400 font-mono w-10 text-center">
+                  {zoomLevel}%
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setZoomLevel((prev) => Math.min(150, prev + 15))}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                  title="Zoom In"
+                >
+                  <ZoomIn className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Document Sheet Canvas */}
+            <div
+              style={{ fontSize: `${(zoomLevel / 100) * 11.5}px` }}
+              className="document-sheet rounded-xl p-5 text-slate-200 space-y-4 leading-relaxed font-serif border border-slate-800 shadow-2xl transition-all"
+            >
+              <div className="text-[10px] font-sans uppercase font-bold tracking-wider text-slate-500 pb-2 border-b border-slate-800/80 flex justify-between">
+                <span>{document.original_filename || document.filename}</span>
+                <span>Page {currentPage}</span>
+              </div>
+
+              {activePageParagraphs.map((para, pIdx) => {
+                const isCitedPage = activeCitation && activeCitation.page_number === currentPage;
+                const hasCitationMatch =
+                  isCitedPage &&
+                  activeCitation.snippet &&
+                  (para.toLowerCase().includes(activeCitation.snippet.slice(0, 25).toLowerCase()) ||
+                    activeCitation.snippet.toLowerCase().includes(para.slice(0, 25).toLowerCase()));
+
+                return (
+                  <p
+                    key={pIdx}
+                    className={`transition-all duration-300 ${
+                      hasCitationMatch ? 'citation-highlight-marker' : 'text-slate-300'
+                    }`}
+                  >
+                    {para}
+                  </p>
+                );
+              })}
+
+              <div className="pt-4 border-t border-slate-800/60 text-center text-[10px] font-sans text-slate-500">
+                — {currentPage} —
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'info' && (
           <div className="space-y-4">
             {/* Metadata Table */}

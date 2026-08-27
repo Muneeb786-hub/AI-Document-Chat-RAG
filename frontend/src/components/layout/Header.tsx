@@ -15,6 +15,8 @@ import {
   ChevronDown,
   Search,
   Sliders,
+  Palette,
+  Check,
 } from 'lucide-react';
 import { checkBackendHealth } from '@/lib/api';
 import { ChatMessage } from '@/types/chat';
@@ -31,6 +33,12 @@ interface HeaderProps {
   onOpenSettings?: () => void;
 }
 
+const THEMES = [
+  { id: 'obsidian', name: 'Obsidian Cyan', color: 'bg-cyan-400', border: 'border-cyan-500/40' },
+  { id: 'emerald', name: 'Midnight Emerald', color: 'bg-emerald-400', border: 'border-emerald-500/40' },
+  { id: 'violet', name: 'Deep Violet', color: 'bg-violet-400', border: 'border-violet-500/40' },
+];
+
 export function Header({
   documentCount,
   selectedCount,
@@ -42,7 +50,11 @@ export function Header({
 }: HeaderProps) {
   const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isThemeOpen, setIsThemeOpen] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState<string>('obsidian');
+
   const exportMenuRef = useRef<HTMLDivElement>(null);
+  const themeMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function verifyHealth() {
@@ -54,11 +66,28 @@ export function Header({
     return () => clearInterval(interval);
   }, []);
 
-  // Close export dropdown on click outside
+  // Load and apply theme from localStorage
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('rag-palette-theme') || 'obsidian';
+    setCurrentTheme(savedTheme);
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  }, []);
+
+  const handleThemeChange = (themeId: string) => {
+    setCurrentTheme(themeId);
+    localStorage.setItem('rag-palette-theme', themeId);
+    document.documentElement.setAttribute('data-theme', themeId);
+    setIsThemeOpen(false);
+  };
+
+  // Close menus on click outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
         setIsExportOpen(false);
+      }
+      if (themeMenuRef.current && !themeMenuRef.current.contains(event.target as Node)) {
+        setIsThemeOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -162,8 +191,48 @@ export function Header({
         </div>
       </div>
 
-      {/* Actions: Settings, Export, Clear, Source */}
+      {/* Actions: Palette Theme, Settings, Export, Clear, Source */}
       <div className="flex items-center space-x-2">
+        {/* Theme Palette Switcher Dropdown */}
+        <div className="relative" ref={themeMenuRef}>
+          <button
+            type="button"
+            onClick={() => setIsThemeOpen((prev) => !prev)}
+            className="flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-800 rounded-lg transition-all shadow-sm"
+            title="Switch Theme Palette"
+          >
+            <Palette className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden sm:inline capitalize text-[11px]">
+              {currentTheme}
+            </span>
+          </button>
+
+          {isThemeOpen && (
+            <div className="absolute right-0 mt-2 w-48 rounded-xl bg-slate-900 border border-slate-800 shadow-xl p-1.5 z-50 space-y-1 backdrop-blur-md">
+              <div className="px-2.5 py-1 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                Theme Palette
+              </div>
+              {THEMES.map((theme) => (
+                <button
+                  key={theme.id}
+                  onClick={() => handleThemeChange(theme.id)}
+                  className={`w-full flex items-center justify-between px-2.5 py-2 text-xs rounded-lg transition-colors text-left ${
+                    currentTheme === theme.id
+                      ? 'bg-indigo-600/20 text-white border border-indigo-500/30'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <span className={`w-2.5 h-2.5 rounded-full ${theme.color}`} />
+                    <span>{theme.name}</span>
+                  </div>
+                  {currentTheme === theme.id && <Check className="w-3.5 h-3.5 text-indigo-400" />}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Settings Button */}
         {onOpenSettings && (
           <button
