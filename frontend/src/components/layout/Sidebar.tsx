@@ -1,12 +1,22 @@
 'use client';
 
 import React from 'react';
-import { Layers, HardDrive, Shield } from 'lucide-react';
+import {
+  Layers,
+  HardDrive,
+  PanelLeftClose,
+  PanelLeftOpen,
+  UploadCloud,
+  Sparkles,
+  FileText,
+} from 'lucide-react';
 import { DocumentItem } from '@/types/document';
 import { DocumentUpload } from '../documents/DocumentUpload';
 import { DocumentList } from '../documents/DocumentList';
 
 interface SidebarProps {
+  isOpen: boolean;
+  onToggleOpen: () => void;
   documents: DocumentItem[];
   selectedDocIds: string[];
   activePreviewDoc: DocumentItem | null;
@@ -22,6 +32,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({
+  isOpen,
+  onToggleOpen,
   documents,
   selectedDocIds,
   activePreviewDoc,
@@ -35,13 +47,56 @@ export function Sidebar({
   onDelete,
   onCompareSelected,
 }: SidebarProps) {
+  if (!isOpen) {
+    return (
+      <aside className="w-14 border-r border-slate-800/80 bg-slate-950/80 flex flex-col items-center py-4 space-y-4 shrink-0 h-[calc(100vh-4rem)] transition-all duration-300">
+        <button
+          onClick={onToggleOpen}
+          className="p-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-white transition-colors shadow-sm"
+          title="Expand Document Sidebar (Cmd+B)"
+        >
+          <PanelLeftOpen className="w-4 h-4 text-indigo-400" />
+        </button>
+
+        <div className="w-8 h-[1px] bg-slate-800" />
+
+        <button
+          onClick={onLoadSample}
+          className="p-2 rounded-xl bg-indigo-950/40 hover:bg-indigo-900/60 border border-indigo-500/30 text-indigo-400 transition-colors shadow-sm"
+          title="Load Sample Document"
+        >
+          <Sparkles className="w-4 h-4" />
+        </button>
+
+        <div className="flex-1 flex flex-col items-center space-y-2 pt-2">
+          <div
+            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-cyan-400 text-xs font-bold"
+            title={`${selectedDocIds.length} of ${documents.length} documents selected`}
+          >
+            {selectedDocIds.length}
+          </div>
+        </div>
+      </aside>
+    );
+  }
+
   return (
-    <aside className="w-80 md:w-88 border-r border-slate-800/80 bg-slate-950/70 flex flex-col h-[calc(100vh-4rem)] p-4 space-y-4 shrink-0 overflow-hidden">
-      {/* Upload Zone */}
-      <div className="space-y-1">
-        <h2 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
-          Document Ingestion
-        </h2>
+    <aside className="w-80 md:w-88 border-r border-slate-800/80 bg-slate-950/70 flex flex-col h-[calc(100vh-4rem)] p-4 space-y-4 shrink-0 overflow-hidden transition-all duration-300">
+      {/* Upload Zone & Collapse Header */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+            Document Ingestion
+          </h2>
+          <button
+            onClick={onToggleOpen}
+            className="p-1 text-slate-500 hover:text-slate-200 rounded-lg hover:bg-slate-900 transition-colors"
+            title="Collapse Sidebar (Cmd+B)"
+          >
+            <PanelLeftClose className="w-4 h-4" />
+          </button>
+        </div>
+
         <DocumentUpload
           onUpload={onUpload}
           onLoadSample={onLoadSample}

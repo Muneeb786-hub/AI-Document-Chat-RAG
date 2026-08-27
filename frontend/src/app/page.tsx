@@ -29,6 +29,7 @@ export default function Home() {
   } = useDocuments();
 
   const [ragSettings, setRagSettings] = useState<RAGSettings>(DEFAULT_RAG_SETTINGS);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isInspectorOpen, setIsInspectorOpen] = useState(true);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -43,12 +44,17 @@ export default function Home() {
     clearChat,
   } = useChatStream(selectedDocIds, ragSettings);
 
-  // Global Cmd+K / Ctrl+K keyboard shortcut listener
+  // Global Keyboard Shortcuts (Cmd+K / Ctrl+K and Cmd+B / Ctrl+B)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setIsCommandPaletteOpen((prev) => !prev);
+      if (e.metaKey || e.ctrlKey) {
+        if (e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          setIsCommandPaletteOpen((prev) => !prev);
+        } else if (e.key.toLowerCase() === 'b') {
+          e.preventDefault();
+          setIsSidebarOpen((prev) => !prev);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -93,8 +99,10 @@ export default function Home() {
 
       {/* Main 3-Pane Split Workspace */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Left Sidebar: Document Management */}
+        {/* Left Sidebar: Document Management with Collapse Support */}
         <Sidebar
+          isOpen={isSidebarOpen}
+          onToggleOpen={() => setIsSidebarOpen((prev) => !prev)}
           documents={documents}
           selectedDocIds={selectedDocIds}
           activePreviewDoc={activePreviewDoc}
