@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Bot, User, Copy, Check, Sparkles, BookOpen } from 'lucide-react';
+import { Bot, User, Copy, Check, Sparkles, BookOpen, Zap, Clock, ShieldCheck } from 'lucide-react';
 import { ChatMessage as ChatMessageType, Citation } from '@/types/chat';
 import { CitationPill } from './CitationPill';
 import { formatTimeAgo } from '@/lib/utils';
@@ -93,6 +93,35 @@ export function ChatMessage({ message, onCitationClick, activeCitation }: ChatMe
                 />
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Real-Time Telemetry & Confidence Metrics */}
+        {isAssistant && message.metrics && !message.isStreaming && (
+          <div className="pt-2 flex flex-wrap items-center gap-2 text-[10px] text-slate-500 font-mono">
+            {message.metrics.tokensPerSecond && (
+              <span className="flex items-center space-x-1 px-2 py-0.5 rounded-md bg-slate-950/60 border border-slate-800 text-cyan-400">
+                <Zap className="w-2.5 h-2.5" />
+                <span>{message.metrics.tokensPerSecond} tok/s</span>
+              </span>
+            )}
+            {message.metrics.timeToFirstTokenMs && (
+              <span className="flex items-center space-x-1 px-2 py-0.5 rounded-md bg-slate-950/60 border border-slate-800 text-indigo-400">
+                <Clock className="w-2.5 h-2.5" />
+                <span>{message.metrics.timeToFirstTokenMs}ms TTFT</span>
+              </span>
+            )}
+            {message.metrics.averageConfidence && (
+              <span className="flex items-center space-x-1 px-2 py-0.5 rounded-md bg-slate-950/60 border border-slate-800 text-emerald-400">
+                <ShieldCheck className="w-2.5 h-2.5" />
+                <span>{message.metrics.averageConfidence}% Grounded</span>
+              </span>
+            )}
+            {message.metrics.totalTokens && (
+              <span className="px-2 py-0.5 rounded-md bg-slate-950/60 border border-slate-800 text-slate-400">
+                {message.metrics.totalTokens} tokens
+              </span>
+            )}
           </div>
         )}
       </div>

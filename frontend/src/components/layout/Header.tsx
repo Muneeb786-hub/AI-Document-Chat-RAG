@@ -13,6 +13,8 @@ import {
   FileDown,
   Printer,
   ChevronDown,
+  Search,
+  Sliders,
 } from 'lucide-react';
 import { checkBackendHealth } from '@/lib/api';
 import { ChatMessage } from '@/types/chat';
@@ -25,6 +27,8 @@ interface HeaderProps {
   messages: ChatMessage[];
   documents: DocumentItem[];
   onClearChat: () => void;
+  onOpenCommandPalette?: () => void;
+  onOpenSettings?: () => void;
 }
 
 export function Header({
@@ -33,6 +37,8 @@ export function Header({
   messages,
   documents,
   onClearChat,
+  onOpenCommandPalette,
+  onOpenSettings,
 }: HeaderProps) {
   const [backendStatus, setBackendStatus] = useState<'checking' | 'online' | 'offline'>('checking');
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -90,6 +96,21 @@ export function Header({
 
       {/* Model, DB, Security & System Status Pills */}
       <div className="hidden lg:flex items-center space-x-2.5">
+        {/* Command Palette Trigger Pill */}
+        {onOpenCommandPalette && (
+          <button
+            type="button"
+            onClick={onOpenCommandPalette}
+            className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 text-xs text-slate-400 hover:text-slate-200 transition-all shadow-sm group"
+          >
+            <Search className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-400 transition-colors" />
+            <span>Quick Commands</span>
+            <kbd className="text-[9px] bg-slate-950 px-1.5 py-0.5 rounded border border-slate-700 text-slate-400 font-mono">
+              ⌘K
+            </kbd>
+          </button>
+        )}
+
         {/* Security Guardrail Pill */}
         <div
           className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/30 border border-emerald-800/50 text-xs text-emerald-400 shadow-sm"
@@ -141,8 +162,21 @@ export function Header({
         </div>
       </div>
 
-      {/* Actions: Export, Clear, Source */}
+      {/* Actions: Settings, Export, Clear, Source */}
       <div className="flex items-center space-x-2">
+        {/* Settings Button */}
+        {onOpenSettings && (
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-800 rounded-lg transition-all shadow-sm"
+            title="Tune RAG Parameters"
+          >
+            <Sliders className="w-3.5 h-3.5 text-amber-400" />
+            <span>Settings</span>
+          </button>
+        )}
+
         {/* Export Dropdown */}
         <div className="relative" ref={exportMenuRef}>
           <button

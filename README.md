@@ -56,7 +56,9 @@ Standard Large Language Models struggle with knowledge boundaries and hallucinat
 - 🌊 **Real-Time SSE Token Streaming**: Asynchronous token generation delivered chunk-by-chunk using `text/event-stream` for snappy conversational feedback.
 - 🎯 **Verifiable Citation Inspector**: Answers include source pills linking claims to specific document names, page numbers, and passage snippets.
 - 📑 **Multi-Format Report Export**: Download complete research conversations and source citations as formatted Markdown (`.md`), structured JSON (`.json`), or styled PDF/Print reports.
-- 📚 **Multi-Document Corpus Management**: Query across all indexed documents simultaneously or isolate queries to specific files.
+- ⌨️ **Spotlight Command Palette (`Cmd+K`)**: Fast keyboard-driven command center for searching documents, triggering exports, running cross-document comparisons, and toggling system settings.
+- 📊 **Real-Time Telemetry & Confidence Badges**: Live streaming generation telemetry displayed per message (tokens/second, time-to-first-token latency, grounded confidence scores).
+- ⚙️ **Dynamic RAG Parameter Controls**: Real-time modal tuning for top-$k$ context chunks (1-10), similarity score thresholds (0.0-0.8), and model temperature.
 - 🎨 **Modern Dark-Mode Workspace**: 3-pane split layout built with Next.js 14 App Router, TypeScript, and Tailwind CSS.
 - 🐳 **Containerized Orchestration**: Multi-stage Dockerfiles for frontend and backend with `docker-compose.yml` for unified execution.
 

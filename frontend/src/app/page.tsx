@@ -1,13 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { ChatContainer } from '@/components/chat/ChatContainer';
 import { DocumentViewer } from '@/components/documents/DocumentViewer';
+import { CommandPalette } from '@/components/common/CommandPalette';
+import { SettingsModal } from '@/components/settings/SettingsModal';
 import { useDocuments } from '@/hooks/useDocuments';
 import { useChatStream } from '@/hooks/useChatStream';
-import { Citation } from '@/types/chat';
+import { Citation, RAGSettings, DEFAULT_RAG_SETTINGS } from '@/types/chat';
+import { exportChatAsMarkdown, exportChatAsJSON } from '@/lib/export';
 import { PanelRightClose, PanelRightOpen } from 'lucide-react';
 
 export default function Home() {
@@ -25,6 +28,11 @@ export default function Home() {
     handleDelete,
   } = useDocuments();
 
+  const [ragSettings, setRagSettings] = useState<RAGSettings>(DEFAULT_RAG_SETTINGS);
+  const [isInspectorOpen, setIsInspectorOpen] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
   const {
     messages,
     isStreaming,
@@ -33,9 +41,19 @@ export default function Home() {
     sendMessage,
     stopStreaming,
     clearChat,
-  } = useChatStream(selectedDocIds);
+  } = useChatStream(selectedDocIds, ragSettings);
 
-  const [isInspectorOpen, setIsInspectorOpen] = useState(true);
+  // Global Cmd+K / Ctrl+K keyboard shortcut listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // When a citation badge in chat is clicked, set the active citation and open the inspector
   const handleCitationClick = (citation: Citation) => {
@@ -69,6 +87,8 @@ export default function Home() {
         messages={messages}
         documents={documents}
         onClearChat={clearChat}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
       {/* Main 3-Pane Split Workspace */}
@@ -130,6 +150,31 @@ export default function Home() {
           </aside>
         )}
       </div>
+
+      {/* Interactive Command Palette (Cmd+K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        documents={documents}
+        onSelectDocument={(doc) => {
+          setActivePreviewDoc(doc);
+          setIsInspectorOpen(true);
+        }}
+        onLoadSample={handleLoadSample}
+        onCompareSelected={handleCompareSelected}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        onClearChat={clearChat}
+        onExportMarkdown={() => exportChatAsMarkdown(messages, documents)}
+        onExportJson={() => exportChatAsJSON(messages, documents)}
+      />
+
+      {/* RAG Engine Parameters Tuning Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        settings={ragSettings}
+        onSaveSettings={(newSettings) => setRagSettings(newSettings)}
+      />
     </div>
   );
 }

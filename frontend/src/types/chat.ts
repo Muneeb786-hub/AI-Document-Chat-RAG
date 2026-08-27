@@ -9,6 +9,14 @@ export interface Citation {
   score?: number;
 }
 
+export interface GenerationMetrics {
+  tokensPerSecond?: number;
+  timeToFirstTokenMs?: number;
+  totalTokens?: number;
+  durationMs?: number;
+  averageConfidence?: number;
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
@@ -18,7 +26,22 @@ export interface ChatMessage {
   chunks?: DocumentChunk[];
   isStreaming?: boolean;
   error?: boolean;
+  metrics?: GenerationMetrics;
 }
+
+export interface RAGSettings {
+  topK: number;
+  scoreThreshold: number;
+  temperature: number;
+  searchMode: 'dense' | 'hybrid';
+}
+
+export const DEFAULT_RAG_SETTINGS: RAGSettings = {
+  topK: 4,
+  scoreThreshold: 0.0,
+  temperature: 0.2,
+  searchMode: 'dense',
+};
 
 export interface ChatSession {
   id: string;
