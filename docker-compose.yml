@@ -7,7 +7,7 @@ services:
     container_name: rag_backend
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8008:8000"
     environment:
       - PROJECT_NAME=AI Document Chat (RAG)
       - ENVIRONMENT=production
@@ -22,16 +22,16 @@ services:
       - CHROMA_PERSIST_DIRECTORY=/app/data/chroma_db
       - UPLOAD_DIRECTORY=/app/data/uploads
       - MAX_FILE_SIZE_MB=25
-      - BACKEND_CORS_ORIGINS=["http://localhost:3000","http://localhost:3001","http://localhost:3002","http://127.0.0.1:3002"]
+      - BACKEND_CORS_ORIGINS=["http://localhost:3000","http://localhost:3001","http://localhost:3002","http://localhost:8008","http://127.0.0.1:3002"]
     volumes:
       - chroma_data:/app/data/chroma_db
       - uploads_data:/app/data/uploads
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
-      interval: 15s
+      interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 10s
+      start_period: 5s
     networks:
       - rag_network
 
@@ -41,13 +41,13 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=http://localhost:8000
+        - NEXT_PUBLIC_API_URL=http://localhost:8008
     container_name: rag_frontend
     restart: unless-stopped
     ports:
       - "3002:3002"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_API_URL=http://localhost:8008
       - PORT=3002
     depends_on:
       backend:
